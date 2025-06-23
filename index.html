@@ -260,37 +260,87 @@
         min-height: 260px;
       }
     }
+    @media (max-width: 700px) {
+      .wallet-panel {
+        top: 0;
+        right: 0;
+        left: 0;
+        width: 100vw;
+        min-width: unset;
+        border-radius: 0 0 18px 18px;
+        justify-content: center;
+        padding: 8px 2vw;
+        box-sizing: border-box;
+      }
+      .wallet-info {
+        margin-right: 8px;
+      }
+      .wallet-action-btn {
+        padding: 7px 14px;
+        font-size: 0.98rem;
+      }
+    }
     @media (max-width: 500px) {
       .arcade-container {
-        padding: 18px 4vw 18px 4vw;
+        padding: 8px 0 8px 0;
         min-width: unset;
+        width: 100vw;
+        border-radius: 0;
       }
-      .arcade-image {
-        width: 120px;
+      .arcade-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        margin-top: 16px;
+        width: 100vw;
+        max-width: 100vw;
+        padding: 0 2vw;
+        box-sizing: border-box;
       }
       .arcade-machine {
-        width: 98vw;
-        height: 260px;
+        min-width: unset;
+        max-width: 100vw;
+        width: 100vw;
+        height: auto;
+        min-height: 220px;
       }
       .arcade-frame {
-        padding-top: 12px;
+        padding-top: 8px;
+        border-radius: 12px 12px 18px 18px;
       }
       .arcade-screen {
-        width: 90vw;
-        height: 90px;
+        width: 92vw;
+        height: 80px;
       }
-      .arcade-controls {
-        bottom: 8px;
+      .screen-title {
+        font-size: 1rem;
+      }
+      .play-btn {
+        font-size: 1rem;
+        padding: 8px 18px;
+      }
+      .arcade-controls-up {
+        margin-top: 6px;
       }
       .joystick {
-        width: 22px;
-        height: 22px;
-        margin-right: 12px;
-      }
-      .button.neon-btn {
         width: 16px;
         height: 16px;
+        margin-right: 8px;
       }
+      .button.neon-btn {
+        width: 12px;
+        height: 12px;
+      }
+      .credits {
+        font-size: 1rem;
+        padding: 8px 12px;
+      }
+      .omega-title {
+        font-size: 2rem;
+      }
+    }
+    html, body {
+      max-width: 100vw;
+      overflow-x: hidden;
     }
     .wallet-panel {
       position: fixed;
@@ -344,22 +394,6 @@
       background: #fff;
       color: #000;
       box-shadow: 0 0 32px #fff, 0 0 8px #fff;
-    }
-    @media (max-width: 700px) {
-      .wallet-panel {
-        top: 8px;
-        right: 4vw;
-        padding: 6px 8px;
-        font-size: 0.95rem;
-        min-width: 0;
-      }
-      .wallet-info {
-        margin-right: 8px;
-      }
-      .wallet-action-btn {
-        padding: 7px 14px;
-        font-size: 0.98rem;
-      }
     }
     .arcade-controls-up {
       position: static;
@@ -445,7 +479,7 @@
           <div class="arcade-screen">
             <img src="omega-invaders-screenshot.png" alt="Omega Invaders" class="screen-img" onerror="this.style.display='none'">
             <div class="screen-title">Omega Invaders</div>
-            <button class="play-btn" data-url="https://omega-invaders.vercel.app/">Play</button>
+            <button class="play-btn" data-url="/omega-invaders.html">Play</button>
           </div>
           <div class="arcade-controls-up">
             <div class="joystick"></div>
@@ -461,7 +495,7 @@
           <div class="arcade-screen">
             <img src="omega-pong-screenshot.png" alt="Omega Pong" class="screen-img" onerror="this.style.display='none'">
             <div class="screen-title">Omega Pong</div>
-            <button class="play-btn" data-url="https://omegapong.vercel.app/">Play</button>
+            <button class="play-btn" data-url="/omega-pong.html">Play</button>
           </div>
           <div class="arcade-controls-up">
             <div class="joystick"></div>
@@ -477,7 +511,7 @@
           <div class="arcade-screen">
             <img src="space-omega-screenshot.png" alt="Space Omega" class="screen-img" onerror="this.style.display='none'">
             <div class="screen-title">Space Omega</div>
-            <button class="play-btn" data-url="https://spaceomega.vercel.app/">Play</button>
+            <button class="play-btn" data-url="/space-omega.html">Play</button>
           </div>
           <div class="arcade-controls-up">
             <div class="joystick"></div>
@@ -493,7 +527,7 @@
           <div class="arcade-screen">
             <img src="omega-breaker-screenshot.png" alt="Omega Breaker" class="screen-img" onerror="this.style.display='none'">
             <div class="screen-title">Omega Breaker</div>
-            <button class="play-btn" data-url="https://omegabreaker.vercel.app/">Play</button>
+            <button class="play-btn" data-url="/omega-breaker.html">Play</button>
           </div>
           <div class="arcade-controls-up">
             <div class="joystick"></div>
@@ -509,7 +543,7 @@
           <div class="arcade-screen">
             <img src="omega-io-screenshot.png" alt="Omega.IO" class="screen-img" onerror="this.style.display='none'">
             <div class="screen-title">Omega.IO</div>
-            <button class="play-btn" data-url="https://omegaio.vercel.app/">Play</button>
+            <button class="play-btn" data-url="/omega-io.html">Play</button>
           </div>
           <div class="arcade-controls-up">
             <div class="joystick"></div>
@@ -525,7 +559,7 @@
           <div class="arcade-screen">
             <img src="bushido-screenshot.png" alt="Bushido" class="screen-img" onerror="this.style.display='none'">
             <div class="screen-title">Bushido</div>
-            <button class="play-btn" data-url="https://game-pi-rosy.vercel.app/">Play</button>
+            <button class="play-btn" data-url="/bushido.html">Play</button>
           </div>
           <div class="arcade-controls-up">
             <div class="joystick"></div>
