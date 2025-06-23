@@ -57,19 +57,13 @@
         }
         .restart-btn:hover { transform: scale(1.05); background: linear-gradient(45deg, #ffffff, #ffffff); }
         .web3-btn {
-            background-color: #00b894;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1em;
-            transition: background-color 0.3s;
-            margin-top: 10px;
+            background: linear-gradient(45deg, #4ecdc4, #55efc4);
+            color: #000; border: none; padding: 12px 25px;
+            border-radius: 25px; font-size: 1.1em; font-weight: bold;
+            cursor: pointer; transition: transform 0.2s;
+            display: block; width: 100%; text-align: center; margin-top: 20px;
         }
-        .web3-btn:hover {
-            background-color: #00a884;
-        }
+        .web3-btn:hover { transform: scale(1.05); }
         .leaderboard-container {
             width: 100%; max-width: 1140px; margin-top: 30px;
             padding: 20px; background: rgba(255, 255, 255, 0.05);
@@ -81,20 +75,12 @@
         #leaderboardTable th { background-color: rgba(255,255,255,0.1); }
         #leaderboardTable tr:last-child td { border-bottom: none; }
         #exportCsvBtn { margin-top: 20px; float: right; }
-        .container.extended-view {
-            width: 95%;
-            max-width: 1800px;
-            height: 90vh;
-        }
-        .container.extended-view .game-area {
-            height: 100%;
-        }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="page-wrapper">
         <div class="ui-panel">
-            <h1 class="game-title">Omega.io</h1>
+            <h1 class="title">Omega.io</h1>
             <div class="stats-container">
                 <div class="score">Score: <span id="score">0</span></div>
                 <div class="score">Length: <span id="length">1</span></div>
@@ -102,18 +88,18 @@
             <div class="controls-info">
                 <h3>Controls</h3>
                 <p>Press WASD or Arrow Keys to start and move.</p>
-                <p>Use your finger to swipe on mobile.</p>
-                <button id="toggleSizeBtn" class="web3-btn">Extend Size</button>
-                <div id="walletStatus" style="display:none; margin-top: 15px;">
+            </div>
+            <div class="wallet-info">
+                <button id="connectWalletBtn" class="web3-btn">Connect Wallet</button>
+                <div id="walletStatus" style="display: none;">
                     <p>Status: <span id="connectionStatus">Disconnected</span></p>
                     <p>Wallet: <span id="walletAddress">N/A</span></p>
                 </div>
-                <button id="connectWalletBtn" class="web3-btn">Connect Wallet</button>
             </div>
         </div>
-        <div class="game-area">
-            <canvas id="gameCanvas"></canvas>
-            <div id="gameOver" class="game-over-modal">
+        <div class="game-container">
+            <canvas id="gameCanvas" width="800" height="600"></canvas>
+            <div class="game-over" id="gameOver">
                 <h2>Game Over!</h2>
                 <p>Final Score: <span id="finalScore">0</span></p>
                 <p>Snake Length: <span id="finalLength">1</span></p>
@@ -139,38 +125,8 @@
         document.addEventListener('DOMContentLoaded', (event) => {
             const canvas = document.getElementById('gameCanvas');
             const ctx = canvas.getContext('2d');
-            const container = document.querySelector('.container');
-            const gameArea = document.querySelector('.game-area');
-
-            const toggleSizeBtn = document.getElementById('toggleSizeBtn');
-            if (localStorage.getItem('extendedView') === 'true') {
-                container.classList.add('extended-view');
-                toggleSizeBtn.textContent = 'Normal Size';
-            } else {
-                toggleSizeBtn.textContent = 'Extend Size';
-            }
-
-            toggleSizeBtn.addEventListener('click', () => {
-                if (localStorage.getItem('extendedView') === 'true') {
-                    localStorage.setItem('extendedView', 'false');
-                } else {
-                    localStorage.setItem('extendedView', 'true');
-                }
-                location.reload();
-            });
             
-            canvas.style.width = '100%';
-            canvas.style.height = '100%';
-            canvas.width = gameArea.offsetWidth;
-            canvas.height = gameArea.offsetHeight;
-
-            const GRID_CELL_SIZE = 20;
-            const canvasWidth = canvas.width;
-            const canvasHeight = canvas.height;
-            const numCols = Math.floor(canvasWidth / GRID_CELL_SIZE);
-            const numRows = Math.floor(canvasHeight / GRID_CELL_SIZE);
-            
-            let snake = [{ x: Math.floor(numCols / 2) * GRID_CELL_SIZE, y: Math.floor(numRows / 2) * GRID_CELL_SIZE }];
+            let snake = [{x: 400, y: 300}];
             let bots = [];
             let food = [];
             let direction = {x: 0, y: 0};
@@ -198,12 +154,10 @@
     
             function spawnBot() {
                 let botX, botY;
-                const playerStartX = Math.floor(numCols / 2) * GRID_CELL_SIZE;
-                const playerStartY = Math.floor(numRows / 2) * GRID_CELL_SIZE;
                 do {
-                    botX = Math.floor(Math.random() * numCols) * GRID_CELL_SIZE;
-                    botY = Math.floor(Math.random() * numRows) * GRID_CELL_SIZE;
-                } while (Math.abs(botX - playerStartX) < 80 && Math.abs(botY - playerStartY) < 80);
+                    botX = Math.floor(Math.random() * 40) * 20;
+                    botY = Math.floor(Math.random() * 30) * 20;
+                } while (Math.abs(botX - 400) < 80 && Math.abs(botY - 300) < 80); // Create a safe zone around player start
                 bots.push({
                     snake: [{ x: botX, y: botY }],
                     direction: {x: 0, y: 0},
@@ -211,18 +165,8 @@
                     decisionTimeout: 0
                 });
             }
-            function resetBot(bot) { 
-                let botX, botY;
-                const playerStartX = Math.floor(numCols / 2) * GRID_CELL_SIZE;
-                const playerStartY = Math.floor(numRows / 2) * GRID_CELL_SIZE;
-                do {
-                    botX = Math.floor(Math.random() * numCols) * GRID_CELL_SIZE;
-                    botY = Math.floor(Math.random() * numRows) * GRID_CELL_SIZE;
-                } while (Math.abs(botX - playerStartX) < 80 && Math.abs(botY - playerStartY) < 80);
-                bot.snake = [{ x: botX, y: botY }]; 
-                bot.direction = {x: 0, y: 0}; 
-            }
-            function spawnFood() { food.push({ x: Math.floor(Math.random() * numCols) * GRID_CELL_SIZE, y: Math.floor(Math.random() * numRows) * GRID_CELL_SIZE }); }
+            function resetBot(bot) { bot.snake = [{ x: Math.floor(Math.random() * 40) * 20, y: Math.floor(Math.random() * 30) * 20 }]; bot.direction = {x: 0, y: 0}; }
+            function spawnFood() { food.push({ x: Math.floor(Math.random() * 40) * 20, y: Math.floor(Math.random() * 30) * 20 }); }
     
             function updateBots() {
                 if (!gameRunning || !gameStarted) return;
@@ -255,8 +199,8 @@
                         bot.decisionTimeout = Math.floor(Math.random() * 10) + 5;
                     }
                     const head = {...bot.snake[0]};
-                    head.x += bot.direction.x * GRID_CELL_SIZE; head.y += bot.direction.y * GRID_CELL_SIZE;
-                    if (head.x < 0 || head.x >= canvasWidth || head.y < 0 || head.y >= canvasHeight) { resetBot(bot); return; }
+                    head.x += bot.direction.x * 20; head.y += bot.direction.y * 20;
+                    if (head.x < 0 || head.x >= 800 || head.y < 0 || head.y >= 600) { resetBot(bot); return; }
                     for (const segment of snake) { if (head.x === segment.x && head.y === segment.y) { resetBot(bot); return; } }
                     if(bot.snake.length > 1) { for (let i = 1; i < bot.snake.length; i++) { if (head.x === bot.snake[i].x && head.y === bot.snake[i].y) { resetBot(bot); return; } } }
                     bot.snake.unshift(head);
@@ -307,8 +251,8 @@
             function update() {
                 if (!gameRunning || !gameStarted || (direction.x === 0 && direction.y === 0)) return;
                 const head = {...snake[0]};
-                head.x += direction.x * GRID_CELL_SIZE; head.y += direction.y * GRID_CELL_SIZE;
-                if (head.x < 0 || head.x >= canvasWidth || head.y < 0 || head.y >= canvasHeight) { gameOver(); return; }
+                head.x += direction.x * 20; head.y += direction.y * 20;
+                if (head.x < 0 || head.x >= 800 || head.y < 0 || head.y >= 600) { gameOver(); return; }
                 if (snake.length > 1) { for (let i = 1; i < snake.length; i++) { if (head.x === snake[i].x && head.y === snake[i].y) { gameOver(); return; } } }
                 for (let bot of bots) { for(let segment of bot.snake) { if (head.x === segment.x && head.y === segment.y) { gameOver(); return; } } }
                 snake.unshift(head);
@@ -321,25 +265,25 @@
                 document.getElementById('length').textContent = snake.length;
             }
             function render() {
-                ctx.fillStyle = colors.background; ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+                ctx.fillStyle = colors.background; ctx.fillRect(0, 0, 800, 600);
                 ctx.strokeStyle = colors.grid; ctx.lineWidth = 1;
-                for (let x = 0; x < canvasWidth; x += GRID_CELL_SIZE) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvasHeight); ctx.stroke(); }
-                for (let y = 0; y < canvasHeight; y += GRID_CELL_SIZE) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvasWidth, y); ctx.stroke(); }
+                for (let x = 0; x < 800; x += 20) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 600); ctx.stroke(); }
+                for (let y = 0; y < 600; y += 20) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(800, y); ctx.stroke(); }
                 ctx.fillStyle = colors.food;
-                for (let f of food) { ctx.beginPath(); ctx.arc(f.x + (GRID_CELL_SIZE/2), f.y + (GRID_CELL_SIZE/2), (GRID_CELL_SIZE/2) - 2, 0, Math.PI * 2); ctx.fill(); ctx.shadowColor = colors.food; ctx.shadowBlur = 10; ctx.fill(); ctx.shadowBlur = 0; }
+                for (let f of food) { ctx.beginPath(); ctx.arc(f.x + 10, f.y + 10, 8, 0, Math.PI * 2); ctx.fill(); ctx.shadowColor = colors.food; ctx.shadowBlur = 10; ctx.fill(); ctx.shadowBlur = 0; }
                 bots.forEach(bot => {
                     for (let i = 0; i < bot.snake.length; i++) {
                         const seg = bot.snake[i];
-                        const grad = ctx.createRadialGradient(seg.x + (GRID_CELL_SIZE/2), seg.y + (GRID_CELL_SIZE/2), 0, seg.x + (GRID_CELL_SIZE/2), seg.y + (GRID_CELL_SIZE/2), 15);
+                        const grad = ctx.createRadialGradient(seg.x + 10, seg.y + 10, 0, seg.x + 10, seg.y + 10, 15);
                         if (i === 0) { grad.addColorStop(0, bot.color); grad.addColorStop(1, 'white'); } else { grad.addColorStop(0, bot.color); grad.addColorStop(1, '#999'); }
-                        ctx.fillStyle = grad; ctx.fillRect(seg.x + 2, seg.y + 2, GRID_CELL_SIZE - 4, GRID_CELL_SIZE - 4);
+                        ctx.fillStyle = grad; ctx.fillRect(seg.x + 2, seg.y + 2, 16, 16);
                     }
                 });
                 for (let i = 0; i < snake.length; i++) {
                     const seg = snake[i];
-                    const grad = ctx.createRadialGradient(seg.x + (GRID_CELL_SIZE/2), seg.y + (GRID_CELL_SIZE/2), 0, seg.x + (GRID_CELL_SIZE/2), seg.y + (GRID_CELL_SIZE/2), 15);
+                    const grad = ctx.createRadialGradient(seg.x + 10, seg.y + 10, 0, seg.x + 10, seg.y + 10, 15);
                     if (i === 0) { grad.addColorStop(0, colors.snakeHead); grad.addColorStop(1, colors.snake); } else { grad.addColorStop(0, colors.snake); grad.addColorStop(1, '#999999'); }
-                    ctx.fillStyle = grad; ctx.fillRect(seg.x + 2, seg.y + 2, GRID_CELL_SIZE - 4, GRID_CELL_SIZE - 4); ctx.shadowColor = colors.snake; ctx.shadowBlur = 5; ctx.fillRect(seg.x + 2, seg.y + 2, GRID_CELL_SIZE - 4, GRID_CELL_SIZE - 4); ctx.shadowBlur = 0;
+                    ctx.fillStyle = grad; ctx.fillRect(seg.x + 2, seg.y + 2, 16, 16); ctx.shadowColor = colors.snake; ctx.shadowBlur = 5; ctx.fillRect(seg.x + 2, seg.y + 2, 16, 16); ctx.shadowBlur = 0;
                 }
             }
             function gameLoop(currentTime) {
@@ -353,6 +297,21 @@
                 document.getElementById('finalLength').textContent = snake.length;
                 document.getElementById('gameOver').style.display = 'block';
                 if (userAddress) submitScoreBtn.style.display = 'block';
+            }
+            function restartGame() {
+                snake = [{x: 400, y: 300}];
+                bots = [];
+                food = [];
+                direction = {x: 0, y: 0};
+                score = 0;
+                gameRunning = true;
+                gameStarted = false;
+                gameSpeed = 150;
+                for (let i = 0; i < 5; i++) spawnFood();
+                for (let i = 0; i < NUM_BOTS; i++) spawnBot();
+                document.getElementById('gameOver').style.display = 'none';
+                document.getElementById('score').textContent = '0';
+                document.getElementById('length').textContent = '1';
             }
     
             async function connectWallet() {
