@@ -863,31 +863,37 @@
     function updatePlayButtons() {
       document.querySelectorAll('.play-btn').forEach(btn => {
         const machine = btn.closest('.arcade-machine');
-        if (machine && machine.dataset.game === 'bushido') {
-          btn.disabled = false;
-          btn.classList.remove('disabled');
-        } else if (freePlayMode) {
-          btn.disabled = false;
-          btn.classList.remove('disabled');
-        } else {
-          btn.disabled = !(userAddress && credits >= 5);
-        }
+        btn.onclick = function() {
+          if (machine && machine.dataset.game === 'bushido') {
+            window.location.href = btn.getAttribute('data-url');
+          } else if (machine && machine.dataset.game === 'flappy-omega') {
+            sessionStorage.setItem('flappy_omega_in_progress', 'true');
+            window.location.href = btn.getAttribute('data-url');
+          } else if (machine && machine.dataset.game === 'omega-breaker') {
+            sessionStorage.setItem('omega_breaker_in_progress', 'true');
+            window.location.href = btn.getAttribute('data-url');
+          } else if (machine && machine.dataset.game === 'omega-invaders') {
+            sessionStorage.setItem('omega_invaders_in_progress', 'true');
+            window.location.href = btn.getAttribute('data-url');
+          } else if (machine && machine.dataset.game === 'omega-pong') {
+            sessionStorage.setItem('omega_pong_in_progress', 'true');
+            window.location.href = btn.getAttribute('data-url');
+          } else if (machine && machine.dataset.game === 'omega-io') {
+            sessionStorage.setItem('omega_io_in_progress', 'true');
+            window.location.href = btn.getAttribute('data-url');
+          } else if (machine && machine.dataset.game === 'space-omega') {
+            sessionStorage.setItem('space_omega_in_progress', 'true');
+            window.location.href = btn.getAttribute('data-url');
+          } else if (freePlayMode) {
+            window.location.href = btn.getAttribute('data-url');
+          } else if (userAddress && credits >= 5) {
+            credits -= 5;
+            saveState();
+            window.location.href = btn.getAttribute('data-url');
+          }
+        };
       });
     }
-    document.querySelectorAll('.play-btn').forEach(btn => {
-      btn.onclick = function() {
-        const machine = btn.closest('.arcade-machine');
-        if (machine && machine.dataset.game === 'bushido') {
-          window.location.href = btn.getAttribute('data-url');
-        } else if (freePlayMode) {
-          window.location.href = btn.getAttribute('data-url');
-        } else if (userAddress && credits >= 5) {
-          credits -= 5;
-          saveState();
-          window.location.href = btn.getAttribute('data-url');
-        }
-      };
-    });
     // --- Disconnect Wallet ---
     disconnectBtn.onclick = function() {
       userAddress = null;
@@ -918,4 +924,4 @@
     loadState();
   </script>
 </body>
-</html> 
+</html>
