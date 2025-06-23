@@ -155,8 +155,14 @@
     <div id="messageBox" style="display: none;">
         <h2 id="messageTitle"></h2>
         <p id="messageText"></p>
+        <div id="gameOverButtons" style="display:none;">
+            <button id="playAgainBtn" style="margin:10px 5px 0 0;">Play Again</button>
+            <button id="returnArcadeBtn" style="margin:10px 0 0 5px;">Return to Arcade</button>
+        </div>
         <button id="actionButton"></button>
     </div>
+
+    <div id="startOverlay" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:rgba(0,0,0,0.8); color:white; padding:40px; border:2px solid white; text-align:center; font-size:2em; cursor:pointer; z-index:100;">Start Game</div>
 
     <div id="mobile-controls">
         <button id="upBtn">UP</button>
@@ -164,14 +170,77 @@
     </div>
 
     <script>
-        // Arcade credit check: redirect if not enough credits
+        // Arcade credit check: redirect if not enough credits, unless Free Play is active
         (function() {
             const credits = parseInt(localStorage.getItem('omega_arcade_credits') || '0', 10);
-            if (!credits || credits < 5) {
-                window.location.href = '/';
+            const freePlay = localStorage.getItem('omega_arcade_freeplay') === 'true';
+            if ((!credits || credits < 5) && !freePlay) {
+                window.location.href = 'https://arcade.omeganetwork.co/';
             }
         })();
-        // Deduct 5 credits on new game start (call this when the user starts a new game)
+        
+        // Track showMessage timeout globally
+        let messageBoxTimeout = null;
+
+        function showMessage(text, duration = 2000) {
+            const messageBox = document.getElementById('messageBox');
+            const messageText = document.getElementById('messageText');
+            messageText.textContent = text;
+            messageBox.style.display = 'block';
+            if (messageBoxTimeout) {
+                clearTimeout(messageBoxTimeout);
+                messageBoxTimeout = null;
+            }
+            if (duration > 0) {
+                messageBoxTimeout = setTimeout(() => {
+                    // Only hide if not game over
+                    if (!gameOver) {
+                        messageBox.style.display = 'none';
+                    }
+                    messageBoxTimeout = null;
+                }, duration);
+            }
+        }
+
+        function endGame(message) {
+            gameOver = true;
+            gameRunning = false;
+            // Clear any pending messageBox timeout
+            if (messageBoxTimeout) {
+                clearTimeout(messageBoxTimeout);
+                messageBoxTimeout = null;
+            }
+            
+            const messageBox = document.getElementById('messageBox');
+            const messageTitle = document.getElementById('messageTitle');
+            const messageText = document.getElementById('messageText');
+            const gameOverButtons = document.getElementById('gameOverButtons');
+            const actionButton = document.getElementById('actionButton');
+            
+            messageTitle.textContent = 'Game Over';
+            messageText.textContent = message;
+            gameOverButtons.style.display = 'block';
+            actionButton.style.display = 'none';
+            messageBox.style.display = 'block';
+            
+            // Add event listeners for the buttons
+            const playAgainBtn = document.getElementById('playAgainBtn');
+            const returnArcadeBtn = document.getElementById('returnArcadeBtn');
+            
+            if (playAgainBtn) {
+                playAgainBtn.onclick = () => {
+                    messageBox.style.display = 'none';
+                    document.getElementById('startOverlay').style.display = 'block';
+                };
+            }
+            if (returnArcadeBtn) {
+                returnArcadeBtn.onclick = () => {
+                    window.location.href = 'https://arcade.omeganetwork.co/';
+                };
+            }
+        }
+
+        // Deduct 5 credits on new game start (only in token mode)
         function deductArcadeCredits() {
             let credits = parseInt(localStorage.getItem('omega_arcade_credits') || '0', 10);
             credits = Math.max(0, credits - 5);
@@ -471,32 +540,39 @@
                 ball.velocityY = 300;
             }
 
-            function setGameState(state) {
-                gameState = state;
-                const box = document.getElementById('messageBox');
-                if (state === 'start' || state === 'over') {
-                    box.style.display = 'block';
-                    if (state === 'start') {
-                        resetGame();
-                        document.getElementById('messageTitle').textContent = 'Omega Pong';
-                        document.getElementById('messageText').textContent = 'First to 10 points wins. Click to start.';
-                        document.getElementById('actionButton').textContent = 'Play';
-                        document.getElementById('actionButton').onclick = () => setGameState('playing');
-                    } else { // over
-                        document.getElementById('messageTitle').textContent = 'Game Over';
-                        document.getElementById('messageText').textContent = `Final Score: ${player.score} - ${opponent.score}`;
-                        document.getElementById('actionButton').textContent = 'Play Again';
-                        document.getElementById('actionButton').onclick = () => setGameState('start');
-                        if (userAddress && player.score > opponent.score) {
-                            document.getElementById('submitScoreBtn').style.display = 'block';
-                        }
+            // --- Modern Wallet Connection Logic ---
+            let walletConnected = false;
+
+            async function checkWalletConnection() {
+                if (typeof window.ethereum !== 'undefined') {
+                    provider = new ethers.providers.Web3Provider(window.ethereum);
+                    const accounts = await provider.listAccounts();
+                    if (accounts.length > 0) {
+                        signer = provider.getSigner();
+                        walletConnected = true;
+                        userAddress = await signer.getAddress();
+                        contract = new ethers.Contract(contractAddress, contractABI, signer);
+                        
+                        const connectWalletBtn = document.getElementById('connectWalletBtn');
+                        connectWalletBtn.disabled = true;
+                        connectWalletBtn.textContent = 'Connected';
+                        
+                        document.getElementById('exportCsvBtn').style.display = 'block';
+                        fetchLeaderboard();
+                    } else {
+                        walletConnected = false;
+                        const connectWalletBtn = document.getElementById('connectWalletBtn');
+                        connectWalletBtn.disabled = false;
+                        connectWalletBtn.textContent = 'Connect Wallet';
                     }
-                } else { // playing
-                    box.style.display = 'none';
-                    document.getElementById('submitScoreBtn').style.display = 'none';
+                } else {
+                    const connectWalletBtn = document.getElementById('connectWalletBtn');
+                    connectWalletBtn.disabled = false;
+                    connectWalletBtn.textContent = 'Connect Wallet';
+                    walletConnected = false;
                 }
             }
-            
+
             async function connectWallet() {
                 try {
                     if (typeof window.ethereum === 'undefined') {
@@ -509,9 +585,10 @@
                     signer = provider.getSigner();
                     userAddress = await signer.getAddress();
                     contract = new ethers.Contract(contractAddress, contractABI, signer);
+                    walletConnected = true;
 
                     const connectWalletBtn = document.getElementById('connectWalletBtn');
-                    connectWalletBtn.textContent = `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
+                    connectWalletBtn.textContent = 'Connected';
                     connectWalletBtn.disabled = true;
 
                     document.getElementById('exportCsvBtn').style.display = 'block';
@@ -521,6 +598,55 @@
                 } catch (error) {
                     console.error("Failed to connect wallet:", error);
                     alert("Failed to connect wallet. See console for details.");
+                    walletConnected = false;
+                    const connectWalletBtn = document.getElementById('connectWalletBtn');
+                    connectWalletBtn.disabled = false;
+                    connectWalletBtn.textContent = 'Connect Wallet';
+                }
+            }
+
+            // --- Start Overlay Logic ---
+            const startOverlay = document.getElementById('startOverlay');
+            startOverlay.addEventListener('click', async () => {
+                const credits = parseInt(localStorage.getItem('omega_arcade_credits') || '0', 10);
+                const freePlay = localStorage.getItem('omega_arcade_freeplay') === 'true';
+                
+                if (!walletConnected) {
+                    await connectWallet();
+                    return;
+                }
+                
+                if (!freePlay && (!credits || credits < 5)) {
+                    startOverlay.textContent = 'Not enough credits!';
+                    setTimeout(() => { startOverlay.textContent = 'Start Game'; }, 2000);
+                    return;
+                }
+                
+                if (!freePlay) {
+                    localStorage.setItem('omega_arcade_credits', Math.max(0, credits - 5));
+                }
+                
+                startOverlay.style.display = 'none';
+                resetGame();
+                gameState = 'playing';
+                requestAnimationFrame(gameLoop);
+            });
+
+            // --- Updated Game State Logic ---
+            function setGameState(state) {
+                gameState = state;
+                const box = document.getElementById('messageBox');
+                const freePlay = localStorage.getItem('omega_arcade_freeplay') === 'true';
+                
+                if (state === 'over') {
+                    endGame(`Final Score: ${player.score} - ${opponent.score}`);
+                    if (userAddress && player.score > opponent.score && !freePlay) {
+                        document.getElementById('submitScoreBtn').style.display = 'block';
+                    }
+                } else if (state === 'playing') {
+                    box.style.display = 'none';
+                    document.getElementById('submitScoreBtn').style.display = 'none';
+                    requestAnimationFrame(gameLoop);
                 }
             }
 
@@ -547,6 +673,12 @@
             }
 
             async function submitScore() {
+                const freePlay = localStorage.getItem('omega_arcade_freeplay') === 'true';
+                if (freePlay) {
+                    alert('Score submission is disabled in Free Play mode.');
+                    return;
+                }
+                
                 if (!contract) {
                     alert("Please connect your wallet first.");
                     return;
@@ -646,9 +778,13 @@
             submitScoreBtn.addEventListener('click', submitScore);
             exportCsvBtn.addEventListener('click', exportLeaderboardToCsv);
 
+            // Initialize wallet connection check
+            checkWalletConnection();
+
             window.addEventListener('resize', resizeCanvas);
             resizeCanvas();
-            requestAnimationFrame(gameLoop);
+            // Do not start game loop automatically; only after user interaction
+            // requestAnimationFrame(gameLoop);
         });
     </script>
 </body>
