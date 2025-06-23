@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Omega Invaders</title>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js" crossorigin="anonymous"></script>
+    <style>
+        :root {
+            --primary-color: #ffffff;
+            --secondary-color: #cccccc;
+            --background-color: #000000;
+            --font-family: 'Courier New', Courier, monospace;
+        }
+        body {
+            background-color: var(--background-color);
+            color: var(--primary-color);
+            font-family: var(--font-family);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        .container {
+            display: flex;
+            flex-direction: row;
+            width: 100%;
+            max-width: 1200px;
+            margin: auto;
+            position: relative;
+        }
+        .game-wrapper {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-grow: 1;
+        }
+        canvas {
+            background-color: var(--background-color);
+            border: 2px solid var(--primary-color);
+            display: block;
+        }
+        .ui-panel {
+            width: 300px;
+            padding: 20px;
+            box-sizing: border-box;
+            border-left: 2px solid var(--primary-color);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        h1, h2 {
+            text-align: center;
+            margin: 0 0 10px 0;
+            text-transform: uppercase;
+        }
+        button {
+            background-color: var(--background-color);
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+            padding: 10px 15px;
+            font-family: var(--font-family);
+            cursor: pointer;
+            width: 100%;
+            text-transform: uppercase;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        button:hover, button:disabled {
+            background-color: var(--primary-color);
+            color: var(--background-color);
+        }
+        button:disabled {
+            cursor: not-allowed;
+            border-color: var(--secondary-color);
+            color: var(--secondary-color);
+            background-color: #222 !important;
+            opacity: 1;
+        }
+        button:hover:disabled {
+            background-color: #222 !important;
+            color: var(--secondary-color);
+        }
+        .stats, .web3-status, .leaderboard-controls {
+            border: 1px solid var(--primary-color);
+            padding: 10px;
+        }
+        .leaderboard {
+            margin-top: 15px;
+            border: 1px solid var(--primary-color);
+            padding: 10px;
+            height: 200px;
+            overflow-y: auto;
+        }
+        .leaderboard table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .leaderboard th, .leaderboard td {
+            padding: 5px;
+            text-align: left;
+            border-bottom: 1px solid var(--secondary-color);
+        }
+        .leaderboard th {
+            font-weight: bold;
+        }
+        .mobile-controls {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 80px;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 100;
+        }
+        .mobile-controls .controls-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 100%;
+            padding: 0 10px;
+        }
+        .mobile-controls .d-pad, .mobile-controls .action-button {
+            display: flex;
+            gap: 10px;
+        }
+        .mobile-controls button {
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+            border-radius: 50%;
+        }
+        .message-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 40px;
+            border: 2px solid white;
+            text-align: center;
+            font-size: 2em;
+            display: none;
+            z-index: 50;
+        }
+        @media (max-width: 800px) {
+            .container {
+                flex-direction: column-reverse;
+                padding-bottom: 80px; /* Space for mobile controls */
+            }
+            .ui-panel {
+                width: 100%;
+                border-left: none;
+                border-top: 2px solid var(--primary-color);
+            }
+            canvas {
+                width: 100%;
+                height: auto;
+                border: none;
+                border-bottom: 2px solid var(--primary-color);
+            }
+            .mobile-controls {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="game-wrapper">
+            <canvas id="gameCanvas"></canvas>
+            <div id="messageBox" class="message-box"></div>
+        </div>
+        <div class="ui-panel">
+            <h1>Omega Invaders</h1>
+            <div class="stats">
+                <h2>Game Stats</h2>
+                <p>Score: <span id="score">0</span></p>
+                <p>Lives: <span id="lives">3</span></p>
+                <p>Wave: <span id="wave">1</span></p>
+            </div>
+            
+            <div class="web3-status">
+                <h2>Web3 Status</h2>
+                <p id="walletStatus">Not Connected</p>
+            </div>
+
+            <button id="newGameBtn">New Game</button>
+            <button id="connectWalletBtn">Connect Wallet</button>
+            <button id="submitScoreBtn" disabled>Submit Score</button>
+
+            <div class="leaderboard-controls">
+                <button id="exportCsvBtn">Export CSV</button>
+            </div>
+            
+            <div class="leaderboard">
+                <table id="leaderboardTable">
+                    <thead><tr><th>Rank</th><th>Player</th><th>Score</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mobile-controls">
+        <div class="controls-container">
+            <div class="d-pad">
+                <button id="leftBtn">&larr;</button>
+                <button id="rightBtn">&rarr;</button>
+            </div>
+            <div class="action-button">
+                <button id="fireBtn">FIRE</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Arcade credit check: redirect if not enough credits
+        (function() {
+            const credits = parseInt(localStorage.getItem('omega_arcade_credits') || '0', 10);
+            if (!credits || credits < 5) {
+                window.location.href = '/';
+            }
+        })();
+        
+        // Deduct 5 credits on new game start
+        function deductArcadeCredits() {
+            let credits = parseInt(localStorage.getItem('omega_arcade_credits') || '0', 10);
+            credits = Math.max(0, credits - 5);
+            localStorage.setItem('omega_arcade_credits', credits);
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            const scoreEl = document.getElementById('score');
+            const livesEl = document.getElementById('lives');
+            const waveEl = document.getElementById('wave');
+            const messageBox = document.getElementById('messageBox');
+            
+            let canvasWidth = 800;
+            let canvasHeight = 600;
+            canvas.width = canvasWidth;
+            canvas.height = canvasHeight;
+
+            // --- Game State ---
+            let score = 0;
+            let lives = 3;
+            let wave = 1;
+            let gameOver = false;
+            let gameRunning = true;
+            let lastTime = 0;
+            let keys = {};
+            let animationFrameId = null;
+
+            // --- Player ---
+            const player = {
+                x: canvasWidth / 2 - 25,
+                y: canvasHeight - 60,
+                width: 50,
+                height: 20,
+                speed: 300, // pixels per second
+                color: 'white',
+            };
+
+            // --- Bullets ---
+            let bullets = [];
+            const bulletSpeed = 400;
+            let canShoot = true;
+
+            // --- Invaders ---
+            let invaders = [];
+            let invaderDirection = 1;
+            let invaderSpeed = 50;
+            let invaderDrop = 10;
+            const invaderRows = 5;
+            const invaderCols = 10;
+            let invaderBullets = [];
+            const invaderBulletSpeed = 200;
+            let invaderFireCooldown = 1000; // ms
+
+            // --- Bunkers ---
+            let bunkers = [];
+            const bunkerCount = 4;
+            const bunkerWidth = 80;
+            const bunkerHeight = 18; // thinner bunkers
+            const bunkerHealth = 5;
+
+            // --- Web3 State ---
+            let provider;
+            let signer;
+            let contract;
+            const contractAddress = "0x5cb1ade66a7a4ce980dac59175db51d30509204a"; 
+            const contractABI = [
+                {
+                    "anonymous": false,
+                    "inputs": [
+                        {
+                            "indexed": true,
+                            "internalType": "address",
+                            "name": "player",
+                            "type": "address"
+                        },
+                        {
+                            "indexed": false,
+                            "internalType": "uint256",
+                            "name": "score",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "ScoreSubmitted",
+                    "type": "event"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "_score",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "submitScore",
+                    "outputs": [],
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
+                {
+                    "inputs": [],
+                    "name": "getLeaderboard",
+                    "outputs": [
+                        {
+                            "components": [
+                                {
+                                    "internalType": "address",
+                                    "name": "player",
+                                    "type": "address"
+                                },
+                                {
+                                    "internalType": "uint256",
+                                    "name": "score",
+                                    "type": "uint256"
+                                }
+                            ],
+                            "internalType": "struct Leaderboard.ScoreEntry[]",
+                            "name": "",
+                            "type": "tuple[]"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "inputs": [],
+                    "name": "getPlayerCount",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "",
+                            "type": "address"
+                        }
+                    ],
+                    "name": "highScores",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "players",
+                    "outputs": [
+                        {
+                            "internalType": "address",
+                            "name": "",
+                            "type": "address"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function"
+                }
+            ];
+
+            function showMessage(text, duration = 2000) {
+                messageBox.textContent = text;
+                messageBox.style.display = 'block';
+                if (duration > 0) {
+                    setTimeout(() => {
+                        messageBox.style.display = 'none';
+                    }, duration);
+                }
+            }
+            
+            function initGame() {
+                // Cancel any previous animation frame
+                if (animationFrameId !== null) {
+                    cancelAnimationFrame(animationFrameId);
+                    animationFrameId = null;
+                }
+                score = 0;
+                lives = 3;
+                wave = 1;
+                gameOver = false;
+                gameRunning = true;
+                initWave();
+                updateUI();
+                messageBox.style.display = 'none';
+                lastTime = 0;
+                animationFrameId = requestAnimationFrame(gameLoop);
+            }
+
+            function initWave() {
+                bullets = [];
+                invaderBullets = [];
+                invaders = [];
+                invaderSpeed = 50 + (wave - 1) * 15;
+                invaderFireCooldown = Math.max(200, 1000 - (wave - 1) * 100);
+
+                const invaderWidth = 40;
+                const invaderHeight = 20;
+                const startX = (canvasWidth - invaderCols * (invaderWidth + 10)) / 2;
+                for (let r = 0; r < invaderRows; r++) {
+                    for (let c = 0; c < invaderCols; c++) {
+                        invaders.push({
+                            x: startX + c * (invaderWidth + 10),
+                            y: 50 + r * (invaderHeight + 10),
+                            width: invaderWidth,
+                            height: invaderHeight,
+                        });
+                    }
+                }
+                
+                if (wave === 1) { // Only reset bunkers on the very first wave
+                    bunkers = [];
+                    const bunkerSpacing = (canvasWidth - bunkerCount * bunkerWidth) / (bunkerCount + 1);
+                    for (let i = 0; i < bunkerCount; i++) {
+                        bunkers.push({
+                            x: bunkerSpacing * (i + 1) + bunkerWidth * i,
+                            y: canvasHeight - 120,
+                            width: bunkerWidth,
+                            height: bunkerHeight,
+                            health: bunkerHealth,
+                            parts: createBunkerParts(bunkerHealth)
+                        });
+                    }
+                }
+            }
+
+            function createBunkerParts(health) {
+                let parts = [];
+                for(let i = 0; i < health; i++) {
+                    parts.push({ intact: true });
+                }
+                return parts;
+            }
+
+            function updateUI() {
+                scoreEl.textContent = score;
+                livesEl.textContent = lives;
+                waveEl.textContent = wave;
+                document.getElementById('submitScoreBtn').disabled = gameOver ? false : true;
+            }
+
+            function checkCollisions() {
+                // Player bullets hitting invaders
+                for (let i = bullets.length - 1; i >= 0; i--) {
+                    for (let j = invaders.length - 1; j >= 0; j--) {
+                        if (rectCollision(bullets[i], invaders[j])) {
+                            bullets.splice(i, 1);
+                            invaders.splice(j, 1);
+                            score += 10;
+                            updateUI();
+                            break; 
+                        }
+                    }
+                }
+
+                // Invader bullets hitting player
+                for (let i = invaderBullets.length - 1; i >= 0; i--) {
+                    if (rectCollision(invaderBullets[i], player)) {
+                        invaderBullets.splice(i, 1);
+                        handlePlayerDeath();
+                        break;
+                    }
+                }
+                
+                // Bullets (both types) hitting bunkers
+                checkBunkerCollisions(bullets);
+                checkBunkerCollisions(invaderBullets);
+
+                // Invaders hitting player (game over)
+                for (const invader of invaders) {
+                    if (invader.y + invader.height >= player.y) {
+                        endGame("Invaders reached the bottom!");
+                        break;
+                    }
+                }
+            }
+
+            function checkBunkerCollisions(bulletArray) {
+                for (let i = bulletArray.length - 1; i >= 0; i--) {
+                    for (let j = bunkers.length - 1; j >= 0; j--) {
+                         // Only check collision if bunker has health
+                        if (bunkers[j].health > 0 && rectCollision(bulletArray[i], bunkers[j])) {
+                            bulletArray.splice(i, 1);
+                            bunkers[j].health--;
+                            if(bunkers[j].health < 0) bunkers[j].health = 0;
+                            break; 
+                        }
+                    }
+                }
+            }
+
+            function handlePlayerDeath() {
+                lives--;
+                updateUI();
+                if (lives <= 0) {
+                    endGame("Game Over");
+                } else {
+                    showMessage(`Life Lost! ${lives} left.`, 1500);
+                    player.x = canvasWidth / 2 - player.width / 2;
+                }
+            }
+            
+            function endGame(message) {
+                gameOver = true;
+                gameRunning = false;
+                showMessage(message, 0);
+                updateUI();
+            }
+
+            function update(deltaTime) {
+                if (!gameRunning) return;
+
+                // Player movement
+                if (keys['ArrowLeft'] || keys['a']) {
+                    player.x -= player.speed * deltaTime;
+                }
+                if (keys['ArrowRight'] || keys['d']) {
+                    player.x += player.speed * deltaTime;
+                }
+                player.x = Math.max(0, Math.min(canvasWidth - player.width, player.x));
+                
+                // Player shooting
+                if (keys[' '] && canShoot) {
+                    bullets.push({ x: player.x + player.width / 2 - 2.5, y: player.y, width: 5, height: 10 });
+                    canShoot = false;
+                    setTimeout(() => canShoot = true, 500);
+                }
+
+                // Update bullets
+                for (let i = bullets.length - 1; i >= 0; i--) {
+                    bullets[i].y -= bulletSpeed * deltaTime;
+                    if (bullets[i].y < 0) {
+                        bullets.splice(i, 1);
+                    }
+                }
+                
+                // Update invader bullets
+                for (let i = invaderBullets.length - 1; i >= 0; i--) {
+                    invaderBullets[i].y += invaderBulletSpeed * deltaTime;
+                    if (invaderBullets[i].y > canvasHeight) {
+                        invaderBullets.splice(i, 1);
+                    }
+                }
+                
+                // Update invaders
+                let hitEdge = false;
+                for (const invader of invaders) {
+                    invader.x += invaderSpeed * invaderDirection * deltaTime;
+                    if (invader.x <= 0 || invader.x + invader.width >= canvasWidth) {
+                        hitEdge = true;
+                    }
+                }
+                if (hitEdge) {
+                    invaderDirection *= -1;
+                    for (const invader of invaders) {
+                        invader.y += invaderDrop;
+                    }
+                }
+
+                // Invader shooting logic
+                if (Math.random() * 1000 < invaderFireCooldown * deltaTime && invaders.length > 0) {
+                    const shootingInvader = invaders[Math.floor(Math.random() * invaders.length)];
+                    invaderBullets.push({ x: shootingInvader.x + shootingInvader.width / 2 - 2.5, y: shootingInvader.y + shootingInvader.height, width: 5, height: 10 });
+                }
+
+
+                checkCollisions();
+                
+                if (invaders.length === 0 && !gameOver) {
+                    wave++;
+                    showMessage(`Wave ${wave}`, 1500);
+                    initWave();
+                }
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+                
+                // Draw player
+                ctx.fillStyle = player.color;
+                ctx.fillRect(player.x, player.y, player.width, player.height);
+                
+                // Draw bullets
+                ctx.fillStyle = 'white';
+                bullets.forEach(b => ctx.fillRect(b.x, b.y, b.width, b.height));
+                
+                // Draw invaders
+                ctx.fillStyle = 'white';
+                invaders.forEach(inv => ctx.fillRect(inv.x, inv.y, inv.width, inv.height));
+
+                // Draw invader bullets
+                ctx.fillStyle = 'orange';
+                invaderBullets.forEach(b => ctx.fillRect(b.x, b.y, b.width, b.height));
+
+                // Draw bunkers
+                bunkers.forEach(bunker => {
+                    if(bunker.health > 0) {
+                        ctx.fillStyle = `rgba(255, 255, 255, ${bunker.health / bunkerHealth})`;
+                        ctx.fillRect(bunker.x, bunker.y, bunker.width, bunker.height);
+                    }
+                });
+            }
+
+            function gameLoop(timestamp) {
+                const deltaTime = (timestamp - lastTime) / 1000;
+                lastTime = timestamp;
+
+                if (!isNaN(deltaTime)) {
+                    update(deltaTime);
+                    draw();
+                }
+
+                if (!gameOver) {
+                    animationFrameId = requestAnimationFrame(gameLoop);
+                } else {
+                    animationFrameId = null;
+                }
+            }
+
+            function rectCollision(rect1, rect2) {
+                return rect1.x < rect2.x + rect2.width &&
+                       rect1.x + rect1.width > rect2.x &&
+                       rect1.y < rect2.y + rect2.height &&
+                       rect1.y + rect1.height > rect2.y;
+            }
+
+            function handleResize() {
+                if (window.innerWidth <= 800) {
+                    const aspectRatio = canvasWidth / canvasHeight;
+                    const newWidth = window.innerWidth;
+                    const newHeight = newWidth / aspectRatio;
+                    
+                    canvas.style.width = `${newWidth}px`;
+                    canvas.style.height = `${newHeight}px`;
+                } else {
+                    canvas.style.width = `${canvasWidth}px`;
+                    canvas.style.height = `${canvasHeight}px`;
+                }
+            }
+
+            // --- Event Listeners ---
+            window.addEventListener('keydown', (e) => { keys[e.key] = true; if(e.key === ' ') e.preventDefault(); });
+            window.addEventListener('keyup', (e) => { keys[e.key] = false; });
+            window.addEventListener('resize', handleResize);
+            
+            // Mobile Controls
+            const leftBtn = document.getElementById('leftBtn');
+            const rightBtn = document.getElementById('rightBtn');
+            const fireBtn = document.getElementById('fireBtn');
+
+            leftBtn.addEventListener('touchstart', () => keys['ArrowLeft'] = true);
+            leftBtn.addEventListener('touchend', () => keys['ArrowLeft'] = false);
+            rightBtn.addEventListener('touchstart', () => keys['ArrowRight'] = true);
+            rightBtn.addEventListener('touchend', () => keys['ArrowRight'] = false);
+            fireBtn.addEventListener('touchstart', () => keys[' '] = true);
+            fireBtn.addEventListener('touchend', () => keys[' '] = false);
+
+            // --- Web3 Functions ---
+            const newGameBtn = document.getElementById('newGameBtn');
+            const connectWalletBtn = document.getElementById('connectWalletBtn');
+            const submitScoreBtn = document.getElementById('submitScoreBtn');
+            const exportCsvBtn = document.getElementById('exportCsvBtn');
+            const walletStatusEl = document.getElementById('walletStatus');
+            const leaderboardTableBody = document.querySelector('#leaderboardTable tbody');
+
+            newGameBtn.addEventListener('click', () => {
+                deductArcadeCredits();
+                // Set a flag in sessionStorage to show a reconnect message after reload
+                sessionStorage.setItem('omegaInvadersNewGame', '1');
+                location.reload();
+            });
+            connectWalletBtn.addEventListener('click', connectWallet);
+            submitScoreBtn.addEventListener('click', submitScore);
+            exportCsvBtn.addEventListener('click', exportLeaderboardToCSV);
+            
+            async function connectWallet() {
+                if (typeof window.ethereum !== 'undefined') {
+                    try {
+                        provider = new ethers.providers.Web3Provider(window.ethereum);
+                        await provider.send("eth_requestAccounts", []);
+                        signer = provider.getSigner();
+                        const walletAddress = await signer.getAddress();
+                        walletStatusEl.textContent = `Connected: ${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}`;
+                        contract = new ethers.Contract(contractAddress, contractABI, signer);
+                        connectWalletBtn.disabled = true;
+                        fetchLeaderboard();
+                    } catch (error) {
+                        console.error("Connection failed:", error);
+                        walletStatusEl.textContent = "Connection Failed";
+                    }
+                } else {
+                    walletStatusEl.textContent = "MetaMask not found!";
+                }
+            }
+
+            async function submitScore() {
+                if (!contract || !signer) {
+                    alert("Please connect your wallet first.");
+                    return;
+                }
+                submitScoreBtn.disabled = true;
+                submitScoreBtn.textContent = 'Submitting...';
+                try {
+                    const tx = await contract.submitScore(score);
+                    await tx.wait();
+                    alert("Score submitted successfully!");
+                    fetchLeaderboard();
+                } catch (error) {
+                    console.error("Score submission failed:", error);
+                    alert("Score submission failed. See console for details.");
+                } finally {
+                    submitScoreBtn.disabled = false;
+                    submitScoreBtn.textContent = 'Submit Score';
+                }
+            }
+            
+            async function fetchLeaderboard() {
+                if (!provider && typeof window.ethereum === 'undefined') {
+                    alert("Please install MetaMask to view the leaderboard.");
+                    return;
+                }
+                 if (!contract) {
+                    const tempProvider = new ethers.providers.Web3Provider(window.ethereum);
+                    contract = new ethers.Contract(contractAddress, contractABI, tempProvider);
+                }
+
+                leaderboardTableBody.innerHTML = '<tr><td colspan="3">Loading...</td></tr>';
+                try {
+                    const scores = await contract.getLeaderboard();
+                    leaderboardTableBody.innerHTML = ''; // Clear loading message
+                    if (scores.length === 0) {
+                        leaderboardTableBody.innerHTML = '<tr><td colspan="3">No scores yet.</td></tr>';
+                        return;
+                    }
+                    scores.forEach((entry, index) => {
+                        const tr = document.createElement('tr');
+                        const playerAddress = `${entry.player.substring(0, 6)}...${entry.player.substring(entry.player.length - 4)}`;
+                        tr.innerHTML = `<td>${index + 1}</td><td>${playerAddress}</td><td>${entry.score.toString()}</td>`;
+                        leaderboardTableBody.appendChild(tr);
+                    });
+                } catch (error) {
+                    console.error("Failed to fetch leaderboard:", error);
+                    leaderboardTableBody.innerHTML = '<tr><td colspan="3">Failed to load.</td></tr>';
+                }
+            }
+
+            function exportLeaderboardToCSV() {
+                const rows = leaderboardTableBody.querySelectorAll('tr');
+                if (rows.length === 0 || rows[0].textContent.includes("No scores")) {
+                    alert("No leaderboard data to export.");
+                    return;
+                }
+                let csvContent = "data:text/csv;charset=utf-8,";
+                csvContent += "Rank,Player,Score\r\n";
+                rows.forEach(row => {
+                    const cols = row.querySelectorAll('td');
+                    const rowData = Array.from(cols).map(col => `"${col.innerText}"`).join(",");
+                    csvContent += rowData + "\r\n";
+                });
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", "omega_invaders_leaderboard.csv");
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+
+            // Show reconnect message if page was reloaded for new game
+            if (sessionStorage.getItem('omegaInvadersNewGame') === '1') {
+                showMessage('New game started! Please reconnect your wallet for Web3 features.', 3000);
+                sessionStorage.removeItem('omegaInvadersNewGame');
+            }
+
+            // Initial setup
+            handleResize();
+            initGame();
+        });
+    </script>
+</body>
+</html>
