@@ -211,8 +211,9 @@
             }
             document.addEventListener('keydown', (e) => {
                 if (!gameStarted) {
+                    const freePlay = localStorage.getItem('omega_arcade_freeplay') === 'true';
                     gameStarted = true;
-                    deductArcadeCredits();
+                    if (!freePlay) deductArcadeCredits();
                 }
                 switch(e.key) {
                     case 'ArrowUp': case 'w': case 'W': if (direction.y !== 1) direction = {x: 0, y: -1}; break;
@@ -236,8 +237,9 @@
                 let dy = touchEndY - touchStartY;
                 if (Math.abs(dx) < 20 && Math.abs(dy) < 20) return;
                 if (!gameStarted) {
+                    const freePlay = localStorage.getItem('omega_arcade_freeplay') === 'true';
                     gameStarted = true;
-                    deductArcadeCredits();
+                    if (!freePlay) deductArcadeCredits();
                 }
                 if (Math.abs(dx) > Math.abs(dy)) {
                     if (dx > 0 && direction.x !== -1) direction = {x: 1, y: 0};
@@ -398,24 +400,76 @@
             exportCsvBtn.addEventListener('click', exportToCSV);
             window.addEventListener('load', fetchLeaderboard);
             
-            for (let i = 0; i < 5; i++) spawnFood();
-            for (let i = 0; i < NUM_BOTS; i++) spawnBot();
-            requestAnimationFrame(gameLoop);
-        });
-
-        // Arcade credit check: redirect if not enough credits
-        (function() {
-            const credits = parseInt(localStorage.getItem('omega_arcade_credits') || '0', 10);
-            if (!credits || credits < 5) {
-                window.location.href = '/';
+            // Arcade credit check: redirect if not enough credits, unless Free Play is active
+            (function() {
+                const credits = parseInt(localStorage.getItem('omega_arcade_credits') || '0', 10);
+                const freePlay = localStorage.getItem('omega_arcade_freeplay') === 'true';
+                if ((!credits || credits < 5) && !freePlay) {
+                    window.location.href = '/';
+                }
+            })();
+            // Deduct 5 credits on new game start (only in token mode)
+            function deductArcadeCredits() {
+                let credits = parseInt(localStorage.getItem('omega_arcade_credits') || '0', 10);
+                credits = Math.max(0, credits - 5);
+                localStorage.setItem('omega_arcade_credits', credits);
             }
-        })();
-        // Deduct 5 credits on new game start
-        function deductArcadeCredits() {
-            let credits = parseInt(localStorage.getItem('omega_arcade_credits') || '0', 10);
-            credits = Math.max(0, credits - 5);
-            localStorage.setItem('omega_arcade_credits', credits);
-        }
+
+            // --- Free Play click-to-start logic ---
+            let awaitingFreePlayStart = false;
+            let freePlayPromptDiv = null;
+            function showFreePlayPrompt() {
+                if (!freePlayPromptDiv) {
+                    freePlayPromptDiv = document.createElement('div');
+                    freePlayPromptDiv.style.position = 'absolute';
+                    freePlayPromptDiv.style.top = '50%';
+                    freePlayPromptDiv.style.left = '50%';
+                    freePlayPromptDiv.style.transform = 'translate(-50%, -50%)';
+                    freePlayPromptDiv.style.background = 'rgba(0,0,0,0.92)';
+                    freePlayPromptDiv.style.color = '#4caf50';
+                    freePlayPromptDiv.style.padding = '36px 48px';
+                    freePlayPromptDiv.style.borderRadius = '18px';
+                    freePlayPromptDiv.style.fontSize = '2em';
+                    freePlayPromptDiv.style.textAlign = 'center';
+                    freePlayPromptDiv.style.zIndex = '1000';
+                    freePlayPromptDiv.style.border = '2px solid #4caf50';
+                    document.querySelector('.game-container').appendChild(freePlayPromptDiv);
+                }
+                freePlayPromptDiv.innerHTML = "<b>Free Play Mode</b><br>Click or Tap to Start";
+                freePlayPromptDiv.style.display = 'block';
+                awaitingFreePlayStart = true;
+            }
+            function showFreePlaySecondPrompt() {
+                freePlayPromptDiv.innerHTML = "<b>Free Play Mode</b><br>Click or Tap again to begin!";
+            }
+            function hideFreePlayPrompt() {
+                if (freePlayPromptDiv) freePlayPromptDiv.style.display = 'none';
+            }
+
+            // --- Override game start logic for Free Play ---
+            const freePlay = localStorage.getItem('omega_arcade_freeplay') === 'true';
+            if (freePlay) {
+                showFreePlayPrompt();
+                document.querySelector('.game-container').addEventListener('click', function freePlayClickHandler() {
+                    if (awaitingFreePlayStart) {
+                        showFreePlaySecondPrompt();
+                        awaitingFreePlayStart = false;
+                    } else {
+                        hideFreePlayPrompt();
+                        // Start the game
+                        for (let i = 0; i < 5; i++) spawnFood();
+                        for (let i = 0; i < NUM_BOTS; i++) spawnBot();
+                        requestAnimationFrame(gameLoop);
+                        document.querySelector('.game-container').removeEventListener('click', freePlayClickHandler);
+                    }
+                });
+            } else {
+                // Token mode: start game on first key/touch, deduct credits
+                for (let i = 0; i < 5; i++) spawnFood();
+                for (let i = 0; i < NUM_BOTS; i++) spawnBot();
+                requestAnimationFrame(gameLoop);
+            }
+        });
     </script>
 </body>
 </html>
