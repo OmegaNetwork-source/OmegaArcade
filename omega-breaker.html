@@ -176,15 +176,16 @@
     </div>
 
     <script>
-        // Arcade credit check: redirect if not enough credits
+        // Arcade credit check: redirect if not enough credits, unless Free Play is active
         (function() {
             const credits = parseInt(localStorage.getItem('omega_arcade_credits') || '0', 10);
-            if (!credits || credits < 5) {
+            const freePlay = localStorage.getItem('omega_arcade_freeplay') === 'true';
+            if ((!credits || credits < 5) && !freePlay) {
                 window.location.href = '/';
             }
         })();
         
-        // Deduct 5 credits on new game start
+        // Deduct 5 credits on new game start (only in token mode)
         function deductArcadeCredits() {
             let credits = parseInt(localStorage.getItem('omega_arcade_credits') || '0', 10);
             credits = Math.max(0, credits - 5);
@@ -195,6 +196,10 @@
             const canvas = document.getElementById('gameCanvas');
             const ctx = canvas.getContext('2d');
             const gameContainer = document.querySelector('.game-container');
+            const messageBox = document.getElementById('messageBox');
+            const messageTitle = document.getElementById('messageTitle');
+            const messageText = document.getElementById('messageText');
+            const actionButton = document.getElementById('actionButton');
 
             canvas.width = gameContainer.clientWidth;
             canvas.height = gameContainer.clientHeight;
@@ -203,6 +208,7 @@
             let gameState = 'start'; // 'start', 'playing', 'paused', 'over', 'won'
             let score = 0;
             let lives = 3;
+            let awaitingFreePlayStart = false;
 
             // Time-based physics
             let lastTime = 0;
@@ -375,16 +381,32 @@
                 const title = document.getElementById('messageTitle');
                 const text = document.getElementById('messageText');
                 const button = document.getElementById('actionButton');
-                
+                const freePlay = localStorage.getItem('omega_arcade_freeplay') === 'true';
                 box.style.display = 'block';
                 if(state === 'start') {
-                    title.innerText = "Omega Breakout";
-                    text.innerText = "Clear all the bricks to win.";
-                    button.innerText = "Play";
-                    button.onclick = () => {
-                        deductArcadeCredits();
-                        setGameState('playing');
-                    };
+                    if (freePlay) {
+                        title.innerText = "Omega Breakout (Free Play)";
+                        text.innerHTML = "<span style='color:#4caf50;font-weight:bold;'>Free Play Mode</span><br>Click or Tap to Start.";
+                        button.innerText = "Start Free Play";
+                        button.onclick = () => {
+                            if (!awaitingFreePlayStart) {
+                                awaitingFreePlayStart = true;
+                                text.innerHTML = "<span style='color:#4caf50;font-weight:bold;'>Free Play Mode</span><br>Click or Tap again to begin!";
+                                button.innerText = "Play Now";
+                                return;
+                            }
+                            awaitingFreePlayStart = false;
+                            setGameState('playing');
+                        };
+                    } else {
+                        title.innerText = "Omega Breakout";
+                        text.innerText = "Clear all the bricks to win.";
+                        button.innerText = "Play";
+                        button.onclick = () => {
+                            deductArcadeCredits();
+                            setGameState('playing');
+                        };
+                    }
                 } else if (state === 'over') {
                     title.innerText = "Game Over";
                     text.innerText = `Final Score: ${score}`;
@@ -693,8 +715,6 @@
             // --- Initial Setup ---
             createBricks();
             setGameState('start');
-            // We fetch leaderboard on load, but contract might not be fully available
-            // without a provider. Let's try, but also fetch after connecting.
             setTimeout(fetchLeaderboard, 500);
             requestAnimationFrame(gameLoop);
         });
