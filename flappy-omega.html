@@ -521,10 +521,21 @@
         // Arcade credit check: redirect if not enough credits
         (function() {
             const credits = parseInt(localStorage.getItem('omega_arcade_credits') || '0', 10);
-            if (!credits || credits < 5) {
-                window.location.href = 'https://omega-arcade.vercel.app/';
+            const freePlay = localStorage.getItem('omega_arcade_freeplay') === 'true';
+            if ((!credits || credits < 5) && !freePlay) {
+                window.location.href = '/';
             }
         })();
+
+        // Deduct 5 credits on new game start (call this when the user starts a new game)
+        function deductArcadeCredits() {
+            let credits = parseInt(localStorage.getItem('omega_arcade_credits') || '0', 10);
+            credits = Math.max(0, credits - 5);
+            localStorage.setItem('omega_arcade_credits', credits);
+        }
+
+        // Call deductArcadeCredits() when the user starts a new game
+        resetGame();
 
         // Initial load
         window.addEventListener('load', () => {
