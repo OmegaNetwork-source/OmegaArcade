@@ -60,16 +60,19 @@
       vertical-align: baseline;
     }
     .credits {
-      font-size: 1.2rem;
-      margin: 12px 0 24px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 48px;
+      min-width: 140px;
+      padding: 0 28px;
+      font-size: 1.1rem;
+      font-weight: 700;
       background: #222;
-      padding: 10px 24px;
-      border-radius: 12px;
-      display: inline-block;
-      font-weight: 600;
-      letter-spacing: 0.04em;
+      border-radius: 8px;
       box-shadow: 0 0 16px #fff, 0 0 2px #fff;
       color: #fff;
+      margin: 0;
     }
     .wallet-section, .deposit-section {
       width: 100%;
@@ -279,6 +282,25 @@
         padding: 7px 14px;
         font-size: 0.98rem;
       }
+      .arcade-actions-panel {
+        max-width: 98vw;
+        padding: 12px 2vw 12px 2vw;
+        border-radius: 12px;
+        gap: 10px;
+      }
+      .arcade-actions-row {
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 6px;
+      }
+      .credits, .free-play-btn {
+        width: 100%;
+        min-width: unset;
+        max-width: unset;
+        height: 48px;
+        font-size: 1.08rem;
+        border-radius: 10px;
+      }
     }
     @media (max-width: 500px) {
       .arcade-container {
@@ -420,6 +442,142 @@
       bottom: 24px;
       left: 0;
     }
+    .bushido-machine .arcade-frame {
+      box-shadow: 0 0 24px 4px #fff, 0 0 0 4px #e53935;
+      border: 2px solid #e53935;
+    }
+    .free-play-label {
+      color: #e53935;
+      font-weight: bold;
+      font-size: 1.1em;
+      margin-bottom: 6px;
+      text-shadow: 0 0 8px #fff, 0 0 2px #e53935;
+    }
+    .token-label {
+      color: #fff;
+      font-weight: bold;
+      font-size: 1.1em;
+      margin-bottom: 6px;
+      text-shadow: 0 0 8px #fff, 0 0 2px #fff;
+    }
+    .omega-man-machine .arcade-frame {
+      box-shadow: 0 0 24px 4px #fff, 0 0 0 4px #ffe600;
+      border: 2px solid #ffe600;
+    }
+    .flappy-omega-machine .arcade-frame {
+      box-shadow: 0 0 24px 4px #fff, 0 0 0 4px #00bfff;
+      border: 2px solid #00bfff;
+    }
+    .omega-invaders-machine .arcade-frame {
+      box-shadow: 0 0 24px 4px #fff, 0 0 0 4px #00ff6a;
+      border: 2px solid #00ff6a;
+    }
+    .omega-pong-machine .arcade-frame {
+      box-shadow: 0 0 24px 4px #fff, 0 0 0 4px #a259ff;
+      border: 2px solid #a259ff;
+    }
+    .space-omega-machine .arcade-frame {
+      box-shadow: 0 0 24px 4px #fff, 0 0 0 4px #00fff7;
+      border: 2px solid #00fff7;
+    }
+    .omega-breaker-machine .arcade-frame {
+      box-shadow: 0 0 24px 4px #fff, 0 0 0 4px #ff9100;
+      border: 2px solid #ff9100;
+    }
+    .omega-io-machine .arcade-frame {
+      box-shadow: 0 0 24px 4px #fff, 0 0 0 4px #ff4fd8;
+      border: 2px solid #ff4fd8;
+    }
+    .free-play-section {
+      width: 100%;
+      margin-bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .free-play-btn {
+      background: #fff;
+      color: #111;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 28px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-top: 10px;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      box-shadow: 0 0 16px #fff, 0 0 2px #fff;
+      text-transform: none;
+      letter-spacing: normal;
+    }
+    .free-play-btn:disabled {
+      background: #444;
+      color: #aaa;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    .free-play-btn.active {
+      background: #4caf50;
+      color: #fff;
+      box-shadow: 0 0 24px #4caf50, 0 0 8px #4caf50;
+    }
+    .free-play-btn.active:hover {
+      box-shadow: 0 0 32px #4caf50, 0 0 16px #4caf50;
+    }
+    .free-play-note {
+      font-size: 0.9rem;
+      color: #aaa;
+      text-align: center;
+      font-style: italic;
+      margin-top: 4px;
+    }
+    .arcade-actions-panel {
+      width: 100%;
+      max-width: 400px;
+      margin: 0 auto 32px auto;
+      background: rgba(34,34,34,0.92);
+      border-radius: 18px;
+      box-shadow: 0 2px 24px #0008, 0 0 0 2px #fff2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 18px 18px 18px;
+      gap: 14px;
+    }
+    .arcade-actions-row {
+      width: 100%;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      margin-bottom: 8px;
+    }
+    .credits, .free-play-btn {
+      flex: 1 1 0;
+      min-width: 160px;
+      max-width: 240px;
+      height: 54px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      box-sizing: border-box;
+    }
+    .free-play-btn {
+      margin: 0;
+      box-shadow: 0 0 16px #fff, 0 0 2px #fff;
+      border: none;
+      transition: background 0.2s, color 0.2s;
+    }
+    .free-play-btn.active {
+      background: #4caf50;
+      color: #fff;
+      box-shadow: 0 0 24px #4caf50, 0 0 8px #4caf50;
+    }
   </style>
 </head>
 <body>
@@ -436,17 +594,41 @@
     <h1 class="omega-title">
       <span class="omega-symbol">&#937;</span><span class="omega-text">mega Arcade</span>
     </h1>
-    <div class="credits" id="creditsDisplay">Credits: 0</div>
-    <div class="deposit-section">
-      <button class="deposit-btn" id="depositBtn">Insert 5 Tokens</button>
-      <div id="depositStatus" style="margin-top:8px;font-size:0.95rem;color:#aaa;"></div>
+    <div class="arcade-actions-panel">
+      <div class="arcade-actions-row">
+        <div class="credits" id="creditsDisplay">Credits: 0</div>
+        <button class="free-play-btn" id="freePlayBtn">Free Play</button>
+      </div>
+      <div class="deposit-section">
+        <button class="deposit-btn" id="depositBtn">Insert 5 Tokens</button>
+        <div id="depositStatus" style="margin-top:8px;font-size:0.95rem;color:#aaa;"></div>
+      </div>
+      <div class="free-play-note">Free Play doesn't accumulate points</div>
     </div>
     <div class="arcade-grid">
-      <div class="arcade-machine" data-game="omega-man">
+      <div class="arcade-machine bushido-machine" data-game="bushido">
+        <div class="arcade-frame">
+          <div class="arcade-screen">
+            <img src="bushido-screenshot.png" alt="Bushido Clan Battle" class="screen-img" onerror="this.style.display='none'">
+            <div class="screen-title">Bushido Clan Battle</div>
+            <div class="free-play-label">Free Play</div>
+            <button class="play-btn" data-url="https://game-pi-rosy.vercel.app/">Play</button>
+          </div>
+          <div class="arcade-controls-up">
+            <div class="joystick"></div>
+            <div class="buttons">
+              <div class="button neon-btn"></div>
+              <div class="button neon-btn"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="arcade-machine omega-man-machine" data-game="omega-man">
         <div class="arcade-frame">
           <div class="arcade-screen">
             <img src="omega-man-screenshot.png" alt="Omega-Man" class="screen-img" onerror="this.style.display='none'">
             <div class="screen-title">Omega-Man</div>
+            <div class="token-label">5 Tokens</div>
             <button class="play-btn" data-url="https://omega-man.vercel.app/">Play</button>
           </div>
           <div class="arcade-controls-up">
@@ -458,11 +640,12 @@
           </div>
         </div>
       </div>
-      <div class="arcade-machine" data-game="flappy-omega">
+      <div class="arcade-machine flappy-omega-machine" data-game="flappy-omega">
         <div class="arcade-frame">
           <div class="arcade-screen">
             <img src="flappy-omega-screenshot.png" alt="Flappy Omega" class="screen-img" onerror="this.style.display='none'">
             <div class="screen-title">Flappy Omega</div>
+            <div class="token-label">5 Tokens</div>
             <button class="play-btn" data-url="/flappy-omega.html">Play</button>
           </div>
           <div class="arcade-controls-up">
@@ -474,11 +657,12 @@
           </div>
         </div>
       </div>
-      <div class="arcade-machine" data-game="omega-invaders">
+      <div class="arcade-machine omega-invaders-machine" data-game="omega-invaders">
         <div class="arcade-frame">
           <div class="arcade-screen">
             <img src="omega-invaders-screenshot.png" alt="Omega Invaders" class="screen-img" onerror="this.style.display='none'">
             <div class="screen-title">Omega Invaders</div>
+            <div class="token-label">5 Tokens</div>
             <button class="play-btn" data-url="/omega-invaders.html">Play</button>
           </div>
           <div class="arcade-controls-up">
@@ -490,11 +674,12 @@
           </div>
         </div>
       </div>
-      <div class="arcade-machine" data-game="omega-pong">
+      <div class="arcade-machine omega-pong-machine" data-game="omega-pong">
         <div class="arcade-frame">
           <div class="arcade-screen">
             <img src="omega-pong-screenshot.png" alt="Omega Pong" class="screen-img" onerror="this.style.display='none'">
             <div class="screen-title">Omega Pong</div>
+            <div class="token-label">5 Tokens</div>
             <button class="play-btn" data-url="/omega-pong.html">Play</button>
           </div>
           <div class="arcade-controls-up">
@@ -506,11 +691,12 @@
           </div>
         </div>
       </div>
-      <div class="arcade-machine" data-game="space-omega">
+      <div class="arcade-machine space-omega-machine" data-game="space-omega">
         <div class="arcade-frame">
           <div class="arcade-screen">
             <img src="space-omega-screenshot.png" alt="Space Omega" class="screen-img" onerror="this.style.display='none'">
             <div class="screen-title">Space Omega</div>
+            <div class="token-label">5 Tokens</div>
             <button class="play-btn" data-url="/space-omega.html">Play</button>
           </div>
           <div class="arcade-controls-up">
@@ -522,11 +708,12 @@
           </div>
         </div>
       </div>
-      <div class="arcade-machine" data-game="omega-breaker">
+      <div class="arcade-machine omega-breaker-machine" data-game="omega-breaker">
         <div class="arcade-frame">
           <div class="arcade-screen">
             <img src="omega-breaker-screenshot.png" alt="Omega Breaker" class="screen-img" onerror="this.style.display='none'">
             <div class="screen-title">Omega Breaker</div>
+            <div class="token-label">5 Tokens</div>
             <button class="play-btn" data-url="/omega-breaker.html">Play</button>
           </div>
           <div class="arcade-controls-up">
@@ -538,28 +725,13 @@
           </div>
         </div>
       </div>
-      <div class="arcade-machine" data-game="omega-io">
+      <div class="arcade-machine omega-io-machine" data-game="omega-io">
         <div class="arcade-frame">
           <div class="arcade-screen">
             <img src="omega-io-screenshot.png" alt="Omega.IO" class="screen-img" onerror="this.style.display='none'">
             <div class="screen-title">Omega.IO</div>
+            <div class="token-label">5 Tokens</div>
             <button class="play-btn" data-url="/omega-io.html">Play</button>
-          </div>
-          <div class="arcade-controls-up">
-            <div class="joystick"></div>
-            <div class="buttons">
-              <div class="button neon-btn"></div>
-              <div class="button neon-btn"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="arcade-machine" data-game="bushido">
-        <div class="arcade-frame">
-          <div class="arcade-screen">
-            <img src="bushido-screenshot.png" alt="Bushido" class="screen-img" onerror="this.style.display='none'">
-            <div class="screen-title">Bushido</div>
-            <button class="play-btn" data-url="/bushido.html">Play</button>
           </div>
           <div class="arcade-controls-up">
             <div class="joystick"></div>
@@ -574,7 +746,7 @@
   </div>
   <div class="footer">
     Powered by ARCADE Token &bull; Omega Network<br>
-    <span style="font-size:0.85em;">You must deposit ARCADE tokens to play for points.</span>
+    <span style="font-size:0.85em;">Deposit ARCADE tokens to play for points, or use Free Play for unlimited games (no points).</span>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script>
@@ -587,6 +759,7 @@
     // --- State ---
     let userAddress = null;
     let credits = 0;
+    let freePlayMode = false;
     // --- Elements ---
     const walletBtn = document.getElementById('walletBtn');
     const walletAddressDiv = document.getElementById('walletAddress');
@@ -596,15 +769,18 @@
     const depositStatus = document.getElementById('depositStatus');
     const creditsDisplay = document.getElementById('creditsDisplay');
     const playBtn = document.getElementById('playBtn');
+    const freePlayBtn = document.getElementById('freePlayBtn');
     // --- Load State ---
     function loadState() {
       userAddress = localStorage.getItem('omega_arcade_wallet') || null;
       credits = parseInt(localStorage.getItem('omega_arcade_credits') || '0', 10);
+      freePlayMode = localStorage.getItem('omega_arcade_freeplay') === 'true';
       updateUI();
     }
     function saveState() {
       if (userAddress) localStorage.setItem('omega_arcade_wallet', userAddress);
       localStorage.setItem('omega_arcade_credits', credits);
+      localStorage.setItem('omega_arcade_freeplay', freePlayMode);
     }
     // --- UI Update ---
     function updateUI() {
@@ -621,6 +797,16 @@
         walletAddressDiv.style.display = 'none';
         disconnectBtn.style.display = 'none';
       }
+      
+      // Update free play button
+      if (freePlayMode) {
+        freePlayBtn.textContent = 'Free Play Active';
+        freePlayBtn.classList.add('active');
+      } else {
+        freePlayBtn.textContent = 'Free Play';
+        freePlayBtn.classList.remove('active');
+      }
+      
       updatePlayButtons();
     }
     // --- Wallet Connect ---
@@ -676,12 +862,27 @@
     // --- Arcade Play Buttons ---
     function updatePlayButtons() {
       document.querySelectorAll('.play-btn').forEach(btn => {
-        btn.disabled = !(userAddress && credits > 0);
+        const machine = btn.closest('.arcade-machine');
+        if (machine && machine.dataset.game === 'bushido') {
+          btn.disabled = false;
+          btn.classList.remove('disabled');
+        } else if (freePlayMode) {
+          btn.disabled = false;
+          btn.classList.remove('disabled');
+        } else {
+          btn.disabled = !(userAddress && credits >= 5);
+        }
       });
     }
     document.querySelectorAll('.play-btn').forEach(btn => {
       btn.onclick = function() {
-        if (userAddress && credits > 0) {
+        const machine = btn.closest('.arcade-machine');
+        if (machine && machine.dataset.game === 'bushido') {
+          window.location.href = btn.getAttribute('data-url');
+        } else if (freePlayMode) {
+          window.location.href = btn.getAttribute('data-url');
+        } else if (userAddress && credits >= 5) {
+          credits -= 5;
           saveState();
           window.location.href = btn.getAttribute('data-url');
         }
@@ -690,13 +891,31 @@
     // --- Disconnect Wallet ---
     disconnectBtn.onclick = function() {
       userAddress = null;
+      freePlayMode = false;
       localStorage.removeItem('omega_arcade_wallet');
       credits = 0;
       localStorage.setItem('omega_arcade_credits', credits);
+      localStorage.setItem('omega_arcade_freeplay', false);
+      updateUI();
+    };
+    // --- Free Play ---
+    freePlayBtn.onclick = function() {
+      if (!userAddress) {
+        alert('Connect your wallet first.');
+        return;
+      }
+      freePlayMode = !freePlayMode;
+      if (freePlayMode) {
+        credits = 0; // Reset credits when entering free play
+        alert('Free Play activated! All games are now free to play. Points will not accumulate.');
+      } else {
+        alert('Free Play deactivated. You can now deposit tokens to play for points.');
+      }
+      saveState();
       updateUI();
     };
     // --- Init ---
     loadState();
   </script>
 </body>
-</html> 
+</html>
