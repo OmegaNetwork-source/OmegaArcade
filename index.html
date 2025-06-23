@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Omega Arcade Entry</title>
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:700,400&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background: #111;
+      color: #fff;
+      font-family: 'Montserrat', Arial, sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .arcade-container {
+      background: #181818;
+      border-radius: 24px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      padding: 40px 32px 32px 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 340px;
+      max-width: 95vw;
+    }
+    .arcade-image {
+      width: 180px;
+      margin-bottom: 24px;
+      filter: grayscale(1) contrast(1.2) brightness(1.2);
+    }
+    .omega-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      font-size: 3.2rem;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      margin-bottom: 8px;
+      text-align: center;
+      color: #fff;
+      text-shadow: 0 0 24px #fff, 0 0 4px #fff;
+      gap: 0.08em;
+    }
+    .omega-symbol {
+      font-family: 'Montserrat', Arial, sans-serif;
+      font-weight: 900;
+      font-size: 1.15em;
+      line-height: 1;
+      margin-right: 0.04em;
+      display: inline-block;
+      vertical-align: baseline;
+    }
+    .omega-text {
+      display: inline-block;
+      vertical-align: baseline;
+    }
+    .credits {
+      font-size: 1.2rem;
+      margin: 12px 0 24px 0;
+      background: #222;
+      padding: 10px 24px;
+      border-radius: 12px;
+      display: inline-block;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      box-shadow: 0 0 16px #fff, 0 0 2px #fff;
+      color: #fff;
+    }
+    .wallet-section, .deposit-section {
+      width: 100%;
+      margin-bottom: 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .wallet-btn, .deposit-btn, .enter-btn {
+      background: #fff;
+      color: #111;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 28px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-top: 10px;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .wallet-btn:disabled, .deposit-btn:disabled, .enter-btn:disabled {
+      background: #444;
+      color: #aaa;
+      cursor: not-allowed;
+    }
+    .game-select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      font-size: 1.1rem;
+      margin-bottom: 24px;
+      background: #222;
+      color: #fff;
+      font-weight: 600;
+    }
+    .footer {
+      margin-top: 32px;
+      font-size: 0.95rem;
+      color: #888;
+      text-align: center;
+    }
+    .arcade-machine {
+      margin-top: 32px;
+      display: flex;
+      justify-content: center;
+      width: 320px;
+      height: 420px;
+      position: relative;
+    }
+    .arcade-frame {
+      width: 100%;
+      height: 100%;
+      border-radius: 24px 24px 32px 32px;
+      background: #111;
+      box-shadow: 0 0 24px 4px #fff, 0 0 64px 8px #fff2, 0 0 0 8px #fff inset;
+      border: 4px solid #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      position: relative;
+      padding-top: 32px;
+    }
+    .arcade-screen {
+      width: 240px;
+      height: 160px;
+      background: #222;
+      border-radius: 10px;
+      box-shadow: 0 0 24px 4px #fff, 0 0 0 4px #fff4 inset;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      margin: 0 auto;
+      margin-bottom: 18px;
+      overflow: hidden;
+    }
+    .screen-img {
+      width: 100%;
+      height: 100px;
+      object-fit: cover;
+      margin-bottom: 4px;
+      filter: grayscale(1) contrast(1.1) brightness(1.2);
+    }
+    .screen-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #fff;
+      text-shadow: 0 0 12px #fff, 0 0 2px #fff;
+      margin-bottom: 8px;
+    }
+    .play-btn {
+      background: #fff;
+      color: #111;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 32px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 0 16px #fff, 0 0 2px #fff;
+      transition: background 0.2s, color 0.2s;
+      margin-bottom: 8px;
+    }
+    .play-btn:disabled {
+      background: #444;
+      color: #aaa;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    .arcade-controls {
+      width: 100%;
+      display: flex;
+      flex-direction: row;
+      align-items: flex-end;
+      justify-content: center;
+      margin-top: 18px;
+      position: absolute;
+      bottom: 24px;
+      left: 0;
+    }
+    .joystick {
+      width: 36px;
+      height: 36px;
+      background: #111;
+      border-radius: 50%;
+      border: 4px solid #fff;
+      box-shadow: 0 0 16px 4px #fff, 0 0 0 8px #fff4 inset;
+      margin-right: 32px;
+      position: relative;
+    }
+    .joystick::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 10px;
+      height: 18px;
+      background: #fff;
+      border-radius: 5px;
+      transform: translate(-50%, -120%);
+      box-shadow: 0 0 8px #fff;
+    }
+    .buttons {
+      display: flex;
+      flex-direction: row;
+      gap: 16px;
+    }
+    .button.neon-btn {
+      width: 28px;
+      height: 28px;
+      background: #fff;
+      border-radius: 50%;
+      box-shadow: 0 0 16px 4px #fff, 0 0 0 4px #fff4 inset;
+      border: 2px solid #fff;
+      margin-top: 8px;
+    }
+    .arcade-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 32px;
+      margin-top: 40px;
+      width: 100%;
+      max-width: 1200px;
+      justify-items: center;
+    }
+    .arcade-machine {
+      margin-top: 0;
+      margin-bottom: 0;
+      min-width: 320px;
+      max-width: 340px;
+      min-height: 420px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+    @media (max-width: 900px) {
+      .arcade-grid {
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 18px;
+      }
+      .arcade-machine {
+        min-width: 220px;
+        max-width: 98vw;
+        min-height: 260px;
+      }
+    }
+    @media (max-width: 500px) {
+      .arcade-container {
+        padding: 18px 4vw 18px 4vw;
+        min-width: unset;
+      }
+      .arcade-image {
+        width: 120px;
+      }
+      .arcade-machine {
+        width: 98vw;
+        height: 260px;
+      }
+      .arcade-frame {
+        padding-top: 12px;
+      }
+      .arcade-screen {
+        width: 90vw;
+        height: 90px;
+      }
+      .arcade-controls {
+        bottom: 8px;
+      }
+      .joystick {
+        width: 22px;
+        height: 22px;
+        margin-right: 12px;
+      }
+      .button.neon-btn {
+        width: 16px;
+        height: 16px;
+      }
+    }
+    .wallet-panel {
+      position: fixed;
+      top: 24px;
+      right: 32px;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      background: rgba(24,24,24,0.85);
+      border-radius: 18px;
+      box-shadow: 0 4px 32px #0ff4, 0 2px 12px #0008;
+      padding: 18px 28px;
+      gap: 18px;
+      backdrop-filter: blur(6px);
+      min-width: 340px;
+    }
+    .wallet-info {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      margin-right: 18px;
+    }
+    .wallet-status {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.04em;
+      margin-bottom: 2px;
+      text-shadow: 0 0 16px #fff, 0 0 2px #fff;
+    }
+    .wallet-address {
+      font-size: 1rem;
+      color: #fff;
+      font-family: monospace;
+      opacity: 0.85;
+    }
+    .wallet-action-btn {
+      background: #fff;
+      color: #111;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 24px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 0 16px #fff, 0 0 2px #fff;
+      transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+      margin-left: 0;
+    }
+    .wallet-action-btn:hover {
+      background: #fff;
+      color: #000;
+      box-shadow: 0 0 32px #fff, 0 0 8px #fff;
+    }
+    @media (max-width: 700px) {
+      .wallet-panel {
+        top: 8px;
+        right: 4vw;
+        padding: 6px 8px;
+        font-size: 0.95rem;
+        min-width: 0;
+      }
+      .wallet-info {
+        margin-right: 8px;
+      }
+      .wallet-action-btn {
+        padding: 7px 14px;
+        font-size: 0.98rem;
+      }
+    }
+    .arcade-controls-up {
+      position: static;
+      margin-top: 12px;
+      margin-bottom: 0;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+    }
+    .arcade-frame {
+      position: relative;
+    }
+    .arcade-controls {
+      /* Keep for legacy, but override with .arcade-controls-up */
+      width: 100%;
+      display: flex;
+      flex-direction: row;
+      align-items: flex-end;
+      justify-content: center;
+      margin-top: 18px;
+      position: absolute;
+      bottom: 24px;
+      left: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="wallet-panel">
+    <div class="wallet-info">
+      <span class="wallet-status" id="walletStatus">Wallet Not Connected</span>
+      <span class="wallet-address" id="walletAddress" style="display:none;"></span>
+    </div>
+    <button class="wallet-action-btn" id="walletBtn">Connect Wallet</button>
+    <button class="wallet-action-btn" id="disconnectBtn" style="display:none;">Disconnect Wallet</button>
+  </div>
+  <div class="arcade-container">
+    <img src="insert-arcade.png" alt="Insert ARCADE" class="arcade-image" onerror="this.style.display='none'">
+    <h1 class="omega-title">
+      <span class="omega-symbol">&#937;</span><span class="omega-text">mega Arcade</span>
+    </h1>
+    <div class="credits" id="creditsDisplay">Credits: 0</div>
+    <div class="deposit-section">
+      <button class="deposit-btn" id="depositBtn">Insert 5 Tokens</button>
+      <div id="depositStatus" style="margin-top:8px;font-size:0.95rem;color:#aaa;"></div>
+    </div>
+    <div class="arcade-grid">
+      <div class="arcade-machine" data-game="omega-man">
+        <div class="arcade-frame">
+          <div class="arcade-screen">
+            <img src="omega-man-screenshot.png" alt="Omega-Man" class="screen-img" onerror="this.style.display='none'">
+            <div class="screen-title">Omega-Man</div>
+            <button class="play-btn" data-url="https://omega-man.vercel.app/">Play</button>
+          </div>
+          <div class="arcade-controls-up">
+            <div class="joystick"></div>
+            <div class="buttons">
+              <div class="button neon-btn"></div>
+              <div class="button neon-btn"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="arcade-machine" data-game="flappy-omega">
+        <div class="arcade-frame">
+          <div class="arcade-screen">
+            <img src="flappy-omega-screenshot.png" alt="Flappy Omega" class="screen-img" onerror="this.style.display='none'">
+            <div class="screen-title">Flappy Omega</div>
+            <button class="play-btn" data-url="https://flappyomega.vercel.app/">Play</button>
+          </div>
+          <div class="arcade-controls-up">
+            <div class="joystick"></div>
+            <div class="buttons">
+              <div class="button neon-btn"></div>
+              <div class="button neon-btn"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="arcade-machine" data-game="omega-invaders">
+        <div class="arcade-frame">
+          <div class="arcade-screen">
+            <img src="omega-invaders-screenshot.png" alt="Omega Invaders" class="screen-img" onerror="this.style.display='none'">
+            <div class="screen-title">Omega Invaders</div>
+            <button class="play-btn" data-url="https://omega-invaders.vercel.app/">Play</button>
+          </div>
+          <div class="arcade-controls-up">
+            <div class="joystick"></div>
+            <div class="buttons">
+              <div class="button neon-btn"></div>
+              <div class="button neon-btn"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="arcade-machine" data-game="omega-pong">
+        <div class="arcade-frame">
+          <div class="arcade-screen">
+            <img src="omega-pong-screenshot.png" alt="Omega Pong" class="screen-img" onerror="this.style.display='none'">
+            <div class="screen-title">Omega Pong</div>
+            <button class="play-btn" data-url="https://omegapong.vercel.app/">Play</button>
+          </div>
+          <div class="arcade-controls-up">
+            <div class="joystick"></div>
+            <div class="buttons">
+              <div class="button neon-btn"></div>
+              <div class="button neon-btn"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="arcade-machine" data-game="space-omega">
+        <div class="arcade-frame">
+          <div class="arcade-screen">
+            <img src="space-omega-screenshot.png" alt="Space Omega" class="screen-img" onerror="this.style.display='none'">
+            <div class="screen-title">Space Omega</div>
+            <button class="play-btn" data-url="https://spaceomega.vercel.app/">Play</button>
+          </div>
+          <div class="arcade-controls-up">
+            <div class="joystick"></div>
+            <div class="buttons">
+              <div class="button neon-btn"></div>
+              <div class="button neon-btn"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="arcade-machine" data-game="omega-breaker">
+        <div class="arcade-frame">
+          <div class="arcade-screen">
+            <img src="omega-breaker-screenshot.png" alt="Omega Breaker" class="screen-img" onerror="this.style.display='none'">
+            <div class="screen-title">Omega Breaker</div>
+            <button class="play-btn" data-url="https://omegabreaker.vercel.app/">Play</button>
+          </div>
+          <div class="arcade-controls-up">
+            <div class="joystick"></div>
+            <div class="buttons">
+              <div class="button neon-btn"></div>
+              <div class="button neon-btn"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="arcade-machine" data-game="omega-io">
+        <div class="arcade-frame">
+          <div class="arcade-screen">
+            <img src="omega-io-screenshot.png" alt="Omega.IO" class="screen-img" onerror="this.style.display='none'">
+            <div class="screen-title">Omega.IO</div>
+            <button class="play-btn" data-url="https://omegaio.vercel.app/">Play</button>
+          </div>
+          <div class="arcade-controls-up">
+            <div class="joystick"></div>
+            <div class="buttons">
+              <div class="button neon-btn"></div>
+              <div class="button neon-btn"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="arcade-machine" data-game="bushido">
+        <div class="arcade-frame">
+          <div class="arcade-screen">
+            <img src="bushido-screenshot.png" alt="Bushido" class="screen-img" onerror="this.style.display='none'">
+            <div class="screen-title">Bushido</div>
+            <button class="play-btn" data-url="https://game-pi-rosy.vercel.app/">Play</button>
+          </div>
+          <div class="arcade-controls-up">
+            <div class="joystick"></div>
+            <div class="buttons">
+              <div class="button neon-btn"></div>
+              <div class="button neon-btn"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="footer">
+    Powered by ARCADE Token &bull; Omega Network<br>
+    <span style="font-size:0.85em;">You must deposit ARCADE tokens to play for points.</span>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <script>
+    // --- Config ---
+    const CREDITS_PER_DEPOSIT = 1; // 1 ARCADE = 1 credit
+    const ARCADE_TOKEN_ADDRESS = '0xFF3fD61427d3485c8e33cb5f5999EAd9639C56a5';
+    const ARCADE_DEPOSIT_ADDRESS = '0xA27F8d05b33486785B2cff6D6A0BDe9269c68607';
+    const ARCADE_DECIMALS = 18;
+    const ARCADE_SYMBOL = 'ARCADE';
+    // --- State ---
+    let userAddress = null;
+    let credits = 0;
+    // --- Elements ---
+    const walletBtn = document.getElementById('walletBtn');
+    const walletAddressDiv = document.getElementById('walletAddress');
+    const walletStatus = document.getElementById('walletStatus');
+    const disconnectBtn = document.getElementById('disconnectBtn');
+    const depositBtn = document.getElementById('depositBtn');
+    const depositStatus = document.getElementById('depositStatus');
+    const creditsDisplay = document.getElementById('creditsDisplay');
+    const playBtn = document.getElementById('playBtn');
+    // --- Load State ---
+    function loadState() {
+      userAddress = localStorage.getItem('omega_arcade_wallet') || null;
+      credits = parseInt(localStorage.getItem('omega_arcade_credits') || '0', 10);
+      updateUI();
+    }
+    function saveState() {
+      if (userAddress) localStorage.setItem('omega_arcade_wallet', userAddress);
+      localStorage.setItem('omega_arcade_credits', credits);
+    }
+    // --- UI Update ---
+    function updateUI() {
+      creditsDisplay.textContent = `Credits: ${credits}`;
+      if (userAddress) {
+        walletStatus.textContent = 'Wallet Connected';
+        walletBtn.style.display = 'none';
+        walletAddressDiv.style.display = 'inline-block';
+        walletAddressDiv.textContent = userAddress.slice(0,6) + '...' + userAddress.slice(-4);
+        disconnectBtn.style.display = 'inline-block';
+      } else {
+        walletStatus.textContent = 'Wallet Not Connected';
+        walletBtn.style.display = 'inline-block';
+        walletAddressDiv.style.display = 'none';
+        disconnectBtn.style.display = 'none';
+      }
+      updatePlayButtons();
+    }
+    // --- Wallet Connect ---
+    walletBtn.onclick = async function() {
+      if (window.ethereum) {
+        try {
+          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+          userAddress = accounts[0];
+          saveState();
+          updateUI();
+        } catch (e) {
+          alert('Wallet connection rejected.');
+        }
+      } else {
+        alert('MetaMask or compatible wallet not found.');
+      }
+    };
+    // --- Deposit ---
+    depositBtn.onclick = async function() {
+      if (!userAddress) {
+        alert('Connect your wallet first.');
+        return;
+      }
+      const amount = 5;
+      depositBtn.disabled = true;
+      depositStatus.textContent = 'Waiting for MetaMask...';
+      try {
+        if (!window.ethereum) throw new Error('MetaMask not found');
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+        const arcadeToken = new ethers.Contract(
+          ARCADE_TOKEN_ADDRESS,
+          [
+            'function transfer(address to, uint256 amount) public returns (bool)'
+          ],
+          signer
+        );
+        const tx = await arcadeToken.transfer(
+          ARCADE_DEPOSIT_ADDRESS,
+          ethers.utils.parseUnits(amount.toString(), ARCADE_DECIMALS)
+        );
+        depositStatus.textContent = 'Waiting for confirmation...';
+        await tx.wait();
+        credits += amount * CREDITS_PER_DEPOSIT;
+        saveState();
+        updateUI();
+        depositStatus.textContent = `Deposited ${amount} ${ARCADE_SYMBOL}. (+${amount*CREDITS_PER_DEPOSIT} credits)`;
+      } catch (e) {
+        depositStatus.textContent = 'Deposit failed: ' + (e.message || e);
+      }
+      depositBtn.disabled = false;
+    };
+    // --- Arcade Play Buttons ---
+    function updatePlayButtons() {
+      document.querySelectorAll('.play-btn').forEach(btn => {
+        btn.disabled = !(userAddress && credits > 0);
+      });
+    }
+    document.querySelectorAll('.play-btn').forEach(btn => {
+      btn.onclick = function() {
+        if (userAddress && credits > 0) {
+          saveState();
+          window.location.href = btn.getAttribute('data-url');
+        }
+      };
+    });
+    // --- Disconnect Wallet ---
+    disconnectBtn.onclick = function() {
+      userAddress = null;
+      localStorage.removeItem('omega_arcade_wallet');
+      credits = 0;
+      localStorage.setItem('omega_arcade_credits', credits);
+      updateUI();
+    };
+    // --- Init ---
+    loadState();
+  </script>
+</body>
+</html> 
