@@ -389,8 +389,12 @@
                     resetGame();
                     return;
                 }
-                // Token mode: Deduct 5 credits and start immediately
+                // Token mode: Only start if at least 5 credits
                 let credits = parseInt(localStorage.getItem('omega_arcade_credits') || '0', 10);
+                if (!credits || credits < 5) {
+                    alert('You need at least 5 credits to play!');
+                    return;
+                }
                 credits = Math.max(0, credits - 5);
                 localStorage.setItem('omega_arcade_credits', credits);
                 resetGame();
