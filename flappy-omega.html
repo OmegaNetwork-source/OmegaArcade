@@ -235,6 +235,10 @@
         const leaderboardBody = document.getElementById('leaderboardBody');
         const walletStatusP = document.getElementById('walletStatus');
 
+        // Add click-to-start overlay for Free Play
+        let awaitingFreePlayStart = false;
+        const startMessage = document.getElementById('startMessage');
+
         function drawBird() {
             ctx.save();
             ctx.beginPath();
@@ -372,7 +376,20 @@
         // Event listeners
         function handleUserInput() {
             if (gameState === 'start') {
-                // Deduct 5 credits from localStorage
+                const freePlay = localStorage.getItem('omega_arcade_freeplay') === 'true';
+                if (freePlay && !awaitingFreePlayStart) {
+                    awaitingFreePlayStart = true;
+                    startMessage.style.display = 'block';
+                    startMessage.innerHTML = `<h2>Free Play</h2><p>Click or Tap to Start</p>`;
+                    return;
+                }
+                if (freePlay && awaitingFreePlayStart) {
+                    awaitingFreePlayStart = false;
+                    startMessage.style.display = 'none';
+                    resetGame();
+                    return;
+                }
+                // Token mode: Deduct 5 credits and start immediately
                 let credits = parseInt(localStorage.getItem('omega_arcade_credits') || '0', 10);
                 credits = Math.max(0, credits - 5);
                 localStorage.setItem('omega_arcade_credits', credits);
@@ -533,9 +550,6 @@
             credits = Math.max(0, credits - 5);
             localStorage.setItem('omega_arcade_credits', credits);
         }
-
-        // Call deductArcadeCredits() when the user starts a new game
-        resetGame();
 
         // Initial load
         window.addEventListener('load', () => {
