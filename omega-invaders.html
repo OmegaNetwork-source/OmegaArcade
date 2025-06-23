@@ -698,27 +698,64 @@
             const walletStatusEl = document.getElementById('walletStatus');
             const leaderboardTableBody = document.querySelector('#leaderboardTable tbody');
 
-            // Arcade credit check: redirect if not enough credits
+            // Arcade credit check: redirect if not enough credits, unless Free Play is active
             (function() {
                 const credits = parseInt(localStorage.getItem('omega_arcade_credits') || '0', 10);
-                if (!credits || credits < 5) {
+                const freePlay = localStorage.getItem('omega_arcade_freeplay') === 'true';
+                if ((!credits || credits < 5) && !freePlay) {
                     window.location.href = '/';
                 }
             })();
 
-            // Deduct 5 credits on new game start
+            // Deduct 5 credits on new game start (only in token mode)
             function deductArcadeCredits() {
                 let credits = parseInt(localStorage.getItem('omega_arcade_credits') || '0', 10);
                 credits = Math.max(0, credits - 5);
                 localStorage.setItem('omega_arcade_credits', credits);
             }
 
+            let awaitingFreePlayStart = false;
+
+            function showFreePlayPrompt() {
+                messageBox.innerHTML = "<span style='color:#4caf50;font-weight:bold;'>Free Play Mode</span><br>Click or Tap to Start.";
+                messageBox.style.display = 'block';
+                awaitingFreePlayStart = true;
+            }
+
+            function showFreePlaySecondPrompt() {
+                messageBox.innerHTML = "<span style='color:#4caf50;font-weight:bold;'>Free Play Mode</span><br>Click or Tap again to begin!";
+                messageBox.style.display = 'block';
+            }
+
+            function hidePrompt() {
+                messageBox.style.display = 'none';
+            }
+
+            // Overwrite New Game logic for Free Play
             newGameBtn.addEventListener('click', () => {
-                deductArcadeCredits();
-                // Set a flag in sessionStorage to show a reconnect message after reload
-                sessionStorage.setItem('omegaInvadersNewGame', '1');
-                location.reload();
+                const freePlay = localStorage.getItem('omega_arcade_freeplay') === 'true';
+                if (freePlay) {
+                    showFreePlayPrompt();
+                } else {
+                    deductArcadeCredits();
+                    sessionStorage.setItem('omegaInvadersNewGame', '1');
+                    location.reload();
+                }
             });
+
+            // Listen for click/tap on the prompt in Free Play
+            messageBox.addEventListener('click', () => {
+                if (awaitingFreePlayStart) {
+                    showFreePlaySecondPrompt();
+                    awaitingFreePlayStart = false;
+                } else if (messageBox.style.display === 'block') {
+                    hidePrompt();
+                    // Set a flag in sessionStorage to show a reconnect message after reload
+                    sessionStorage.setItem('omegaInvadersNewGame', '1');
+                    location.reload();
+                }
+            });
+
             connectWalletBtn.addEventListener('click', connectWallet);
             submitScoreBtn.addEventListener('click', submitScore);
             exportCsvBtn.addEventListener('click', exportLeaderboardToCSV);
@@ -820,11 +857,14 @@
             if (sessionStorage.getItem('omegaInvadersNewGame') === '1') {
                 showMessage('New game started! Please reconnect your wallet for Web3 features.', 3000);
                 sessionStorage.removeItem('omegaInvadersNewGame');
+                // Actually start the game after reload
+                setTimeout(() => { initGame(); }, 1000);
             }
 
             // Initial setup
             handleResize();
-            initGame();
+            // Do not call initGame() automatically; only after user starts
+            // initGame();
         });
     </script>
 </body>
