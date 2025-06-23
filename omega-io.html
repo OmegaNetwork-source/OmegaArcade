@@ -210,7 +210,10 @@
                 });
             }
             document.addEventListener('keydown', (e) => {
-                if (!gameStarted) gameStarted = true;
+                if (!gameStarted) {
+                    gameStarted = true;
+                    deductArcadeCredits();
+                }
                 switch(e.key) {
                     case 'ArrowUp': case 'w': case 'W': if (direction.y !== 1) direction = {x: 0, y: -1}; break;
                     case 'ArrowDown': case 's': case 'S': if (direction.y !== -1) direction = {x: 0, y: 1}; break;
@@ -227,16 +230,15 @@
             canvas.addEventListener('touchend', e => {
                 e.preventDefault();
                 if (!touchStartX || !touchStartY) return;
-
                 let touchEndX = e.changedTouches[0].clientX;
                 let touchEndY = e.changedTouches[0].clientY;
                 let dx = touchEndX - touchStartX;
                 let dy = touchEndY - touchStartY;
-
                 if (Math.abs(dx) < 20 && Math.abs(dy) < 20) return;
-
-                if (!gameStarted) gameStarted = true;
-
+                if (!gameStarted) {
+                    gameStarted = true;
+                    deductArcadeCredits();
+                }
                 if (Math.abs(dx) > Math.abs(dy)) {
                     if (dx > 0 && direction.x !== -1) direction = {x: 1, y: 0};
                     else if (dx < 0 && direction.x !== 1) direction = {x: -1, y: 0};
@@ -408,13 +410,12 @@
                 window.location.href = '/';
             }
         })();
-        // Deduct 5 credits on new game start (call this when the user starts a new game)
+        // Deduct 5 credits on new game start
         function deductArcadeCredits() {
             let credits = parseInt(localStorage.getItem('omega_arcade_credits') || '0', 10);
             credits = Math.max(0, credits - 5);
             localStorage.setItem('omega_arcade_credits', credits);
         }
-        // Call deductArcadeCredits() when the user starts a new game
     </script>
 </body>
 </html>
