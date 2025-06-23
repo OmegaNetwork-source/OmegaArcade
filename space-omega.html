@@ -2,830 +2,848 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Omega Invaders</title>
-    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js" crossorigin="anonymous"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>Astro Omega</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js" integrity="sha512-FDcVY+g7vc5CXANbrTSg1K5qLyriCsGDYCE02Li1tXEYdNQPvLPHNE+rT2Mjei8N7fZbe0WLhw27j2SrGRpdMg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <style>
         :root {
-            --primary-color: #ffffff;
-            --secondary-color: #cccccc;
+            --primary-color: #00ffff;
             --background-color: #000000;
-            --font-family: 'Courier New', Courier, monospace;
+            --text-color: #ffffff;
+            --panel-bg-color: #111;
+            --border-color: #333;
         }
-        body {
-            background-color: var(--background-color);
-            color: var(--primary-color);
-            font-family: var(--font-family);
+        body, html {
             margin: 0;
             padding: 0;
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
-            min-height: 100vh;
-            overflow: hidden;
-        }
-        .container {
-            display: flex;
-            flex-direction: row;
+            height: 100%;
             width: 100%;
-            max-width: 1200px;
-            margin: auto;
-            position: relative;
-        }
-        .game-wrapper {
-            position: relative;
+            font-family: 'Courier New', Courier, monospace;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
+        }
+        .container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+        .game-container {
             flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
         }
         canvas {
-            background-color: var(--background-color);
+            background-color: #000;
+            box-shadow: 0 0 20px var(--primary-color);
             border: 2px solid var(--primary-color);
-            display: block;
+            width: 100%;
+            height: 100%;
         }
         .ui-panel {
             width: 300px;
             padding: 20px;
-            box-sizing: border-box;
-            border-left: 2px solid var(--primary-color);
+            background-color: var(--panel-bg-color);
+            border-left: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.5);
         }
-        h1, h2 {
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            color: var(--primary-color);
             text-align: center;
-            margin: 0 0 10px 0;
-            text-transform: uppercase;
         }
-        button {
-            background-color: var(--background-color);
+        .stats p {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+        .web3-btn {
+            background-color: transparent;
             color: var(--primary-color);
             border: 1px solid var(--primary-color);
             padding: 10px 15px;
-            font-family: var(--font-family);
+            margin: 10px auto;
             cursor: pointer;
-            width: 100%;
-            text-transform: uppercase;
-            transition: background-color 0.2s, color 0.2s;
-        }
-        button:hover, button:disabled {
-            background-color: var(--primary-color);
-            color: var(--background-color);
-        }
-        button:disabled {
-            cursor: not-allowed;
-            border-color: var(--secondary-color);
-            color: var(--secondary-color);
-            background-color: #222 !important;
-            opacity: 1;
-        }
-        button:hover:disabled {
-            background-color: #222 !important;
-            color: var(--secondary-color);
-        }
-        .stats, .web3-status, .leaderboard-controls {
-            border: 1px solid var(--primary-color);
-            padding: 10px;
-        }
-        .leaderboard {
-            margin-top: 15px;
-            border: 1px solid var(--primary-color);
-            padding: 10px;
-            height: 200px;
-            overflow-y: auto;
-        }
-        .leaderboard table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .leaderboard th, .leaderboard td {
-            padding: 5px;
-            text-align: left;
-            border-bottom: 1px solid var(--secondary-color);
-        }
-        .leaderboard th {
-            font-weight: bold;
-        }
-        .mobile-controls {
-            display: none;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 80px;
-            background-color: rgba(0, 0, 0, 0.7);
-            z-index: 100;
-        }
-        .mobile-controls .controls-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            height: 100%;
-            padding: 0 10px;
-        }
-        .mobile-controls .d-pad, .mobile-controls .action-button {
-            display: flex;
-            gap: 10px;
-        }
-        .mobile-controls button {
-            width: 60px;
-            height: 60px;
-            font-size: 24px;
-            border-radius: 50%;
+            font-family: inherit;
+            font-size: 1em;
+            display: block;
+            width: 80%;
         }
         .message-box {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.8);
-            color: white;
-            padding: 40px;
-            border: 2px solid white;
+            background-color: rgba(17, 17, 17, 0.9);
+            padding: 30px;
+            border: 1px solid var(--primary-color);
+            box-shadow: 0 0 15px var(--primary-color);
             text-align: center;
-            font-size: 2em;
             display: none;
-            z-index: 50;
+            z-index: 10;
         }
-        @media (max-width: 800px) {
-            .container {
-                flex-direction: column-reverse;
-                padding-bottom: 80px; /* Space for mobile controls */
-            }
-            .ui-panel {
-                width: 100%;
-                border-left: none;
-                border-top: 2px solid var(--primary-color);
-            }
-            canvas {
-                width: 100%;
-                height: auto;
-                border: none;
-                border-bottom: 2px solid var(--primary-color);
-            }
-            .mobile-controls {
-                display: block;
-            }
+        .mobile-controls {
+            display: none;
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            justify-content: space-between;
+            z-index: 5;
+        }
+        .mobile-controls button {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid white;
+            color: white;
+            font-size: 2em;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 20px;
+            user-select: none; /* prevent text selection */
+        }
+        .mobile-controls .left-controls, .mobile-controls .right-controls {
+            display: flex;
+        }
+        @media (max-width: 768px) {
+            .container { flex-direction: column; }
+            .ui-panel { width: 100%; height: 200px; overflow-y: auto; border-left: none; border-top: 1px solid var(--border-color); }
+            .game-container { height: calc(100vh - 200px); }
+            .mobile-controls { display: flex; }
         }
     </style>
 </head>
 <body>
-
     <div class="container">
-        <div class="game-wrapper">
+        <div class="game-container">
             <canvas id="gameCanvas"></canvas>
-            <div id="messageBox" class="message-box"></div>
+            <div id="messageBox" class="message-box">
+                <h2 id="messageTitle"></h2>
+                <p id="messageText"></p>
+                <div id="gameOverButtons" style="display:none;">
+                    <button id="playAgainBtn" class="web3-btn">Play Again</button>
+                    <button id="returnArcadeBtn" class="web3-btn">Return to Arcade</button>
+                </div>
+                <button id="actionButton" class="web3-btn">Play</button>
+            </div>
+            <div id="startOverlay" class="message-box" style="display:block; cursor:pointer; z-index:100;">
+                <h2>Start Game</h2>
+                <p>Click to begin</p>
+            </div>
+            <div class="mobile-controls">
+                <div class="left-controls">
+                    <button id="leftBtn">⇦</button>
+                    <button id="rightBtn">⇨</button>
+                </div>
+                <div class="right-controls">
+                    <button id="thrustBtn">⇧</button>
+                    <button id="fireBtn">◎</button>
+                </div>
+            </div>
         </div>
         <div class="ui-panel">
-            <h1>Omega Invaders</h1>
+            <h1>Astro<br>Omega</h1>
             <div class="stats">
-                <h2>Game Stats</h2>
                 <p>Score: <span id="score">0</span></p>
                 <p>Lives: <span id="lives">3</span></p>
-                <p>Wave: <span id="wave">1</span></p>
             </div>
-            
-            <div class="web3-status">
-                <h2>Web3 Status</h2>
-                <p id="walletStatus">Not Connected</p>
-            </div>
-
-            <button id="newGameBtn">New Game</button>
-            <button id="connectWalletBtn">Connect Wallet</button>
-            <button id="submitScoreBtn" disabled>Submit Score</button>
-
-            <div class="leaderboard-controls">
-                <button id="exportCsvBtn">Export CSV</button>
-            </div>
-            
-            <div class="leaderboard">
-                <table id="leaderboardTable">
-                    <thead><tr><th>Rank</th><th>Player</th><th>Score</th></tr></thead>
-                    <tbody></tbody>
+            <button id="connectWalletBtn" class="web3-btn">Connect Wallet</button>
+            <button id="submitScoreBtn" class="web3-btn" style="display:none;">Submit Score</button>
+            <button id="exportCsvBtn" class="web3-btn">Export CSV</button>
+            <div class="leaderboard" style="flex-grow:1; overflow-y:auto; margin-top: 15px;">
+                <h2>Leaderboard</h2>
+                <table>
+                    <thead>
+                        <tr><th>Rank</th><th>Player</th><th>Score</th></tr>
+                    </thead>
+                    <tbody id="leaderboardBody"></tbody>
                 </table>
             </div>
-        </div>
-    </div>
-    
-    <div class="mobile-controls">
-        <div class="controls-container">
-            <div class="d-pad">
-                <button id="leftBtn">&larr;</button>
-                <button id="rightBtn">&rarr;</button>
-            </div>
-            <div class="action-button">
-                <button id="fireBtn">FIRE</button>
-            </div>
+            <p id="walletStatus" style="font-size: 0.8em; text-align: center; word-break: break-all;"></p>
         </div>
     </div>
 
     <script>
-        // Arcade credit check: redirect if not enough credits
-        (function() {
-            const credits = parseInt(localStorage.getItem('omega_arcade_credits') || '0', 10);
-            if (!credits || credits < 5) {
-                window.location.href = '/';
+    // Arcade credit check: redirect if not enough credits, unless Free Play is active
+    if (window.location.pathname.endsWith('space-omega.html')) {
+        const credits = parseInt(localStorage.getItem('omega_arcade_credits') || '0', 10);
+        const freePlay = localStorage.getItem('omega_arcade_freeplay') === 'true';
+        if ((!credits || credits < 5) && !freePlay) {
+            window.location.href = 'https://arcade.omeganetwork.co/';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const gameContainer = document.querySelector('.game-container');
+        const messageBox = document.getElementById('messageBox');
+        const messageTitle = document.getElementById('messageTitle');
+        const messageText = document.getElementById('messageText');
+        const actionButton = document.getElementById('actionButton');
+        const startOverlay = document.getElementById('startOverlay');
+        const playAgainBtn = document.getElementById('playAgainBtn');
+        const returnArcadeBtn = document.getElementById('returnArcadeBtn');
+        const submitScoreBtn = document.getElementById('submitScoreBtn');
+        const leaderboardBody = document.getElementById('leaderboardBody');
+        const walletStatusP = document.getElementById('walletStatus');
+        let gameOver = false;
+        let gameRunning = false;
+        let messageBoxTimeout = null;
+
+        function resizeCanvas() {
+            canvas.width = gameContainer.clientWidth;
+            canvas.height = gameContainer.clientHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Game State
+        let gameState = 'start';
+        let score = 0;
+        let lives = 3;
+        let level = 1;
+        let lastTime = 0;
+
+        // Web3
+        let provider, signer, contract, userAddress;
+
+        // Player Ship
+        const ship = {
+            x: canvas.width / 2, y: canvas.height / 2, radius: 15,
+            angle: 90 / 180 * Math.PI, // Pointing up
+            rotation: 0,
+            thrusting: false,
+            thrust: { x: 0, y: 0 },
+            canShoot: true
+        };
+        const SHIP_THRUST = 5;
+        const SHIP_TURN_SPD = 360; // degrees per second
+        const FRICTION = 0.7;
+
+        let bullets = [];
+        let asteroids = [];
+        let stars = [];
+        const STAR_COUNT = 150;
+
+        const keys = { up: false, left: false, right: false, space: false };
+
+        function resetGame() {
+            ship.x = canvas.width / 2;
+            ship.y = canvas.height / 2;
+            ship.thrust = { x: 0, y: 0 };
+            ship.angle = 90 / 180 * Math.PI;
+            bullets = [];
+            score = 0;
+            level = 1;
+            lives = 3;
+            document.getElementById('score').textContent = score;
+            document.getElementById('lives').textContent = lives;
+            createAsteroids(2 + level);
+            createStars();
+        }
+
+        function createStars() {
+            stars = [];
+            for (let i = 0; i < STAR_COUNT; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    radius: Math.random() * 1.2
+                });
             }
-        })();
-        
-        // Deduct 5 credits on new game start
-        function deductArcadeCredits() {
-            let credits = parseInt(localStorage.getItem('omega_arcade_credits') || '0', 10);
-            credits = Math.max(0, credits - 5);
-            localStorage.setItem('omega_arcade_credits', credits);
+        }
+
+        function createAsteroids(count) {
+            asteroids = [];
+            for(let i = 0; i < count; i++) {
+                let x, y;
+                do {
+                    x = Math.random() * canvas.width;
+                    y = Math.random() * canvas.height;
+                } while (Math.hypot(x - ship.x, y - ship.y) < 150); // Safety radius
+
+                asteroids.push({
+                    x: x,
+                    y: y,
+                    radius: 30,
+                    angle: Math.random() * Math.PI * 2,
+                    speed: Math.random() * 30 + (20 * (level * 0.5)),
+                    vert: Math.ceil(Math.random() * 5) + 7
+                });
+            }
+        }
+
+        function update(deltaTime) {
+            // Rotate ship
+            if(keys.left) ship.angle -= (SHIP_TURN_SPD / 180 * Math.PI) * deltaTime;
+            if(keys.right) ship.angle += (SHIP_TURN_SPD / 180 * Math.PI) * deltaTime;
+            
+            // Thrust
+            if(keys.up) {
+                ship.thrust.x += SHIP_THRUST * Math.cos(ship.angle) * deltaTime;
+                ship.thrust.y -= SHIP_THRUST * Math.sin(ship.angle) * deltaTime;
+                ship.thrusting = true;
+            } else {
+                ship.thrust.x -= FRICTION * ship.thrust.x * deltaTime;
+                ship.thrust.y -= FRICTION * ship.thrust.y * deltaTime;
+                ship.thrusting = false;
+            }
+
+            // Move ship
+            ship.x += ship.thrust.x;
+            ship.y += ship.thrust.y;
+
+            // Handle screen wrapping
+            if (ship.x < 0 - ship.radius) ship.x = canvas.width + ship.radius;
+            if (ship.x > canvas.width + ship.radius) ship.x = 0 - ship.radius;
+            if (ship.y < 0 - ship.radius) ship.y = canvas.height + ship.radius;
+            if (ship.y > canvas.height + ship.radius) ship.y = 0 - ship.radius;
+
+            // Bullets
+            if(keys.space && ship.canShoot) {
+                bullets.push({ 
+                    x: ship.x + 4/3 * ship.radius * Math.cos(ship.angle), 
+                    y: ship.y - 4/3 * ship.radius * Math.sin(ship.angle), 
+                    dx: 500 * Math.cos(ship.angle), 
+                    dy: -500 * Math.sin(ship.angle),
+                    dist: 0,
+                    maxDist: canvas.width * 0.75
+                });
+                ship.canShoot = false;
+                setTimeout(() => { ship.canShoot = true; }, 250); // Cooldown
+            }
+
+            bullets.forEach((bullet, i) => {
+                bullet.x += bullet.dx * deltaTime;
+                bullet.y += bullet.dy * deltaTime;
+                if (bullet.x > canvas.width || bullet.x < 0 || bullet.y > canvas.height || bullet.y < 0) {
+                    bullets.splice(i, 1);
+                }
+            });
+            
+            // Asteroids
+            for (let i = asteroids.length - 1; i >= 0; i--) {
+                const ast = asteroids[i];
+                ast.x += ast.speed * Math.cos(ast.angle) * deltaTime;
+                ast.y += ast.speed * Math.sin(ast.angle) * deltaTime;
+
+                if (ast.x < 0 - ast.radius) ast.x = canvas.width + ast.radius;
+                if (ast.x > canvas.width + ast.radius) ast.x = 0 - ast.radius;
+                if (ast.y < 0 - ast.radius) ast.y = canvas.height + ast.radius;
+                if (ast.y > canvas.height + ast.radius) ast.y = 0 - ast.radius;
+
+                // Collision with bullets
+                for (let j = bullets.length - 1; j >= 0; j--) {
+                    const bullet = bullets[j];
+                    if(Math.hypot(ast.x - bullet.x, ast.y - bullet.y) < ast.radius) {
+                        
+                        // Split asteroid if it's big enough
+                        if (ast.radius > 20) {
+                            score += 20;
+                            for (let k = 0; k < 2; k++) {
+                                asteroids.push({
+                                    x: ast.x, y: ast.y, radius: ast.radius / 2,
+                                    angle: Math.random() * Math.PI * 2, speed: ast.speed * 1.2,
+                                    vert: Math.ceil(Math.random() * 5) + 7
+                                });
+                            }
+                        } else {
+                            score += 100; // Points for smallest asteroids
+                        }
+
+                        asteroids.splice(i, 1);
+                        bullets.splice(j, 1);
+                        document.getElementById('score').textContent = score;
+                        break; // Exit bullet loop
+                    }
+                }
+                
+                if (i >= asteroids.length) continue; // if asteroid was destroyed
+
+                // Collision with ship
+                 if(Math.hypot(ast.x - ship.x, ast.y - ship.y) < ast.radius + ship.radius) {
+                    lives--;
+                    if (lives < 0) lives = 0;
+                    document.getElementById('lives').textContent = lives;
+                    if (lives <= 0) {
+                        setGameState('over');
+                    } else {
+                        // Respawn ship
+                        ship.x = canvas.width / 2;
+                        ship.y = canvas.height / 2;
+                        ship.thrust = { x: 0, y: 0 };
+                        asteroids.splice(i, 1); // remove asteroid that hit player
+                    }
+                }
+            }
+
+            if(asteroids.length === 0 && gameState ==='playing') {
+                gameState = 'paused'; // Prevent updates while message is shown
+                level++;
+                lives++;
+                score += 1000;
+                document.getElementById('lives').textContent = lives;
+                document.getElementById('score').textContent = score;
+                
+                const box = document.getElementById('messageBox');
+                const title = document.getElementById('messageTitle');
+                const text = document.getElementById('messageText');
+                const button = document.getElementById('actionButton');
+                
+                box.style.display = 'block';
+                title.textContent = `Wave ${level - 1} Cleared!`;
+                text.textContent = `+1 Life! Get ready for Wave ${level}...`;
+                button.style.display = 'none';
+
+                setTimeout(() => {
+                    createAsteroids(2 + level);
+                    box.style.display = 'none';
+                    button.style.display = 'block';
+                    gameState = 'playing';
+                    lastTime = 0; // Reset delta time to prevent jump
+                }, 2500);
+            }
         }
         
-        document.addEventListener('DOMContentLoaded', () => {
-            const canvas = document.getElementById('gameCanvas');
-            const ctx = canvas.getContext('2d');
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            const scoreEl = document.getElementById('score');
-            const livesEl = document.getElementById('lives');
-            const waveEl = document.getElementById('wave');
-            const messageBox = document.getElementById('messageBox');
-            
-            let canvasWidth = 800;
-            let canvasHeight = 600;
-            canvas.width = canvasWidth;
-            canvas.height = canvasHeight;
-
-            // --- Game State ---
-            let score = 0;
-            let lives = 3;
-            let wave = 1;
-            let gameOver = false;
-            let gameRunning = true;
-            let lastTime = 0;
-            let keys = {};
-            let animationFrameId = null;
-
-            // --- Player ---
-            const player = {
-                x: canvasWidth / 2 - 25,
-                y: canvasHeight - 60,
-                width: 50,
-                height: 20,
-                speed: 300, // pixels per second
-                color: 'white',
-            };
-
-            // --- Bullets ---
-            let bullets = [];
-            const bulletSpeed = 400;
-            let canShoot = true;
-
-            // --- Invaders ---
-            let invaders = [];
-            let invaderDirection = 1;
-            let invaderSpeed = 50;
-            let invaderDrop = 10;
-            const invaderRows = 5;
-            const invaderCols = 10;
-            let invaderBullets = [];
-            const invaderBulletSpeed = 200;
-            let invaderFireCooldown = 1000; // ms
-
-            // --- Bunkers ---
-            let bunkers = [];
-            const bunkerCount = 4;
-            const bunkerWidth = 80;
-            const bunkerHeight = 18; // thinner bunkers
-            const bunkerHealth = 5;
-
-            // --- Web3 State ---
-            let provider;
-            let signer;
-            let contract;
-            const contractAddress = "0x5cb1ade66a7a4ce980dac59175db51d30509204a"; 
-            const contractABI = [
-                {
-                    "anonymous": false,
-                    "inputs": [
-                        {
-                            "indexed": true,
-                            "internalType": "address",
-                            "name": "player",
-                            "type": "address"
-                        },
-                        {
-                            "indexed": false,
-                            "internalType": "uint256",
-                            "name": "score",
-                            "type": "uint256"
-                        }
-                    ],
-                    "name": "ScoreSubmitted",
-                    "type": "event"
-                },
-                {
-                    "inputs": [
-                        {
-                            "internalType": "uint256",
-                            "name": "_score",
-                            "type": "uint256"
-                        }
-                    ],
-                    "name": "submitScore",
-                    "outputs": [],
-                    "stateMutability": "nonpayable",
-                    "type": "function"
-                },
-                {
-                    "inputs": [],
-                    "name": "getLeaderboard",
-                    "outputs": [
-                        {
-                            "components": [
-                                {
-                                    "internalType": "address",
-                                    "name": "player",
-                                    "type": "address"
-                                },
-                                {
-                                    "internalType": "uint256",
-                                    "name": "score",
-                                    "type": "uint256"
-                                }
-                            ],
-                            "internalType": "struct Leaderboard.ScoreEntry[]",
-                            "name": "",
-                            "type": "tuple[]"
-                        }
-                    ],
-                    "stateMutability": "view",
-                    "type": "function"
-                },
-                {
-                    "inputs": [],
-                    "name": "getPlayerCount",
-                    "outputs": [
-                        {
-                            "internalType": "uint256",
-                            "name": "",
-                            "type": "uint256"
-                        }
-                    ],
-                    "stateMutability": "view",
-                    "type": "function"
-                },
-                {
-                    "inputs": [
-                        {
-                            "internalType": "address",
-                            "name": "",
-                            "type": "address"
-                        }
-                    ],
-                    "name": "highScores",
-                    "outputs": [
-                        {
-                            "internalType": "uint256",
-                            "name": "",
-                            "type": "uint256"
-                        }
-                    ],
-                    "stateMutability": "view",
-                    "type": "function"
-                },
-                {
-                    "inputs": [
-                        {
-                            "internalType": "uint256",
-                            "name": "",
-                            "type": "uint256"
-                        }
-                    ],
-                    "name": "players",
-                    "outputs": [
-                        {
-                            "internalType": "address",
-                            "name": "",
-                            "type": "address"
-                        }
-                    ],
-                    "stateMutability": "view",
-                    "type": "function"
-                }
-            ];
-
-            function showMessage(text, duration = 2000) {
-                messageBox.textContent = text;
-                messageBox.style.display = 'block';
-                if (duration > 0) {
-                    setTimeout(() => {
-                        messageBox.style.display = 'none';
-                    }, duration);
-                }
-            }
-            
-            function initGame() {
-                // Cancel any previous animation frame
-                if (animationFrameId !== null) {
-                    cancelAnimationFrame(animationFrameId);
-                    animationFrameId = null;
-                }
-                score = 0;
-                lives = 3;
-                wave = 1;
-                gameOver = false;
-                gameRunning = true;
-                initWave();
-                updateUI();
-                messageBox.style.display = 'none';
-                lastTime = 0;
-                animationFrameId = requestAnimationFrame(gameLoop);
-            }
-
-            function initWave() {
-                bullets = [];
-                invaderBullets = [];
-                invaders = [];
-                invaderSpeed = 50 + (wave - 1) * 15;
-                invaderFireCooldown = Math.max(200, 1000 - (wave - 1) * 100);
-
-                const invaderWidth = 40;
-                const invaderHeight = 20;
-                const startX = (canvasWidth - invaderCols * (invaderWidth + 10)) / 2;
-                for (let r = 0; r < invaderRows; r++) {
-                    for (let c = 0; c < invaderCols; c++) {
-                        invaders.push({
-                            x: startX + c * (invaderWidth + 10),
-                            y: 50 + r * (invaderHeight + 10),
-                            width: invaderWidth,
-                            height: invaderHeight,
-                        });
-                    }
-                }
-                
-                if (wave === 1) { // Only reset bunkers on the very first wave
-                    bunkers = [];
-                    const bunkerSpacing = (canvasWidth - bunkerCount * bunkerWidth) / (bunkerCount + 1);
-                    for (let i = 0; i < bunkerCount; i++) {
-                        bunkers.push({
-                            x: bunkerSpacing * (i + 1) + bunkerWidth * i,
-                            y: canvasHeight - 120,
-                            width: bunkerWidth,
-                            height: bunkerHeight,
-                            health: bunkerHealth,
-                            parts: createBunkerParts(bunkerHealth)
-                        });
-                    }
-                }
-            }
-
-            function createBunkerParts(health) {
-                let parts = [];
-                for(let i = 0; i < health; i++) {
-                    parts.push({ intact: true });
-                }
-                return parts;
-            }
-
-            function updateUI() {
-                scoreEl.textContent = score;
-                livesEl.textContent = lives;
-                waveEl.textContent = wave;
-                document.getElementById('submitScoreBtn').disabled = gameOver ? false : true;
-            }
-
-            function checkCollisions() {
-                // Player bullets hitting invaders
-                for (let i = bullets.length - 1; i >= 0; i--) {
-                    for (let j = invaders.length - 1; j >= 0; j--) {
-                        if (rectCollision(bullets[i], invaders[j])) {
-                            bullets.splice(i, 1);
-                            invaders.splice(j, 1);
-                            score += 10;
-                            updateUI();
-                            break; 
-                        }
-                    }
-                }
-
-                // Invader bullets hitting player
-                for (let i = invaderBullets.length - 1; i >= 0; i--) {
-                    if (rectCollision(invaderBullets[i], player)) {
-                        invaderBullets.splice(i, 1);
-                        handlePlayerDeath();
-                        break;
-                    }
-                }
-                
-                // Bullets (both types) hitting bunkers
-                checkBunkerCollisions(bullets);
-                checkBunkerCollisions(invaderBullets);
-
-                // Invaders hitting player (game over)
-                for (const invader of invaders) {
-                    if (invader.y + invader.height >= player.y) {
-                        endGame("Invaders reached the bottom!");
-                        break;
-                    }
-                }
-            }
-
-            function checkBunkerCollisions(bulletArray) {
-                for (let i = bulletArray.length - 1; i >= 0; i--) {
-                    for (let j = bunkers.length - 1; j >= 0; j--) {
-                         // Only check collision if bunker has health
-                        if (bunkers[j].health > 0 && rectCollision(bulletArray[i], bunkers[j])) {
-                            bulletArray.splice(i, 1);
-                            bunkers[j].health--;
-                            if(bunkers[j].health < 0) bunkers[j].health = 0;
-                            break; 
-                        }
-                    }
-                }
-            }
-
-            function handlePlayerDeath() {
-                lives--;
-                updateUI();
-                if (lives <= 0) {
-                    endGame("Game Over");
-                } else {
-                    showMessage(`Life Lost! ${lives} left.`, 1500);
-                    player.x = canvasWidth / 2 - player.width / 2;
-                }
-            }
-            
-            function endGame(message) {
-                gameOver = true;
-                gameRunning = false;
-                showMessage(message, 0);
-                updateUI();
-            }
-
-            function update(deltaTime) {
-                if (!gameRunning) return;
-
-                // Player movement
-                if (keys['ArrowLeft'] || keys['a']) {
-                    player.x -= player.speed * deltaTime;
-                }
-                if (keys['ArrowRight'] || keys['d']) {
-                    player.x += player.speed * deltaTime;
-                }
-                player.x = Math.max(0, Math.min(canvasWidth - player.width, player.x));
-                
-                // Player shooting
-                if (keys[' '] && canShoot) {
-                    bullets.push({ x: player.x + player.width / 2 - 2.5, y: player.y, width: 5, height: 10 });
-                    canShoot = false;
-                    setTimeout(() => canShoot = true, 500);
-                }
-
-                // Update bullets
-                for (let i = bullets.length - 1; i >= 0; i--) {
-                    bullets[i].y -= bulletSpeed * deltaTime;
-                    if (bullets[i].y < 0) {
-                        bullets.splice(i, 1);
-                    }
-                }
-                
-                // Update invader bullets
-                for (let i = invaderBullets.length - 1; i >= 0; i--) {
-                    invaderBullets[i].y += invaderBulletSpeed * deltaTime;
-                    if (invaderBullets[i].y > canvasHeight) {
-                        invaderBullets.splice(i, 1);
-                    }
-                }
-                
-                // Update invaders
-                let hitEdge = false;
-                for (const invader of invaders) {
-                    invader.x += invaderSpeed * invaderDirection * deltaTime;
-                    if (invader.x <= 0 || invader.x + invader.width >= canvasWidth) {
-                        hitEdge = true;
-                    }
-                }
-                if (hitEdge) {
-                    invaderDirection *= -1;
-                    for (const invader of invaders) {
-                        invader.y += invaderDrop;
-                    }
-                }
-
-                // Invader shooting logic
-                if (Math.random() * 1000 < invaderFireCooldown * deltaTime && invaders.length > 0) {
-                    const shootingInvader = invaders[Math.floor(Math.random() * invaders.length)];
-                    invaderBullets.push({ x: shootingInvader.x + shootingInvader.width / 2 - 2.5, y: shootingInvader.y + shootingInvader.height, width: 5, height: 10 });
-                }
-
-
-                checkCollisions();
-                
-                if (invaders.length === 0 && !gameOver) {
-                    wave++;
-                    showMessage(`Wave ${wave}`, 1500);
-                    initWave();
-                }
-            }
-
-            function draw() {
-                ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-                
-                // Draw player
-                ctx.fillStyle = player.color;
-                ctx.fillRect(player.x, player.y, player.width, player.height);
-                
-                // Draw bullets
-                ctx.fillStyle = 'white';
-                bullets.forEach(b => ctx.fillRect(b.x, b.y, b.width, b.height));
-                
-                // Draw invaders
-                ctx.fillStyle = 'white';
-                invaders.forEach(inv => ctx.fillRect(inv.x, inv.y, inv.width, inv.height));
-
-                // Draw invader bullets
-                ctx.fillStyle = 'orange';
-                invaderBullets.forEach(b => ctx.fillRect(b.x, b.y, b.width, b.height));
-
-                // Draw bunkers
-                bunkers.forEach(bunker => {
-                    if(bunker.health > 0) {
-                        ctx.fillStyle = `rgba(255, 255, 255, ${bunker.health / bunkerHealth})`;
-                        ctx.fillRect(bunker.x, bunker.y, bunker.width, bunker.height);
-                    }
-                });
-            }
-
-            function gameLoop(timestamp) {
-                const deltaTime = (timestamp - lastTime) / 1000;
-                lastTime = timestamp;
-
-                if (!isNaN(deltaTime)) {
-                    update(deltaTime);
-                    draw();
-                }
-
-                if (!gameOver) {
-                    animationFrameId = requestAnimationFrame(gameLoop);
-                } else {
-                    animationFrameId = null;
-                }
-            }
-
-            function rectCollision(rect1, rect2) {
-                return rect1.x < rect2.x + rect2.width &&
-                       rect1.x + rect1.width > rect2.x &&
-                       rect1.y < rect2.y + rect2.height &&
-                       rect1.y + rect1.height > rect2.y;
-            }
-
-            function handleResize() {
-                if (window.innerWidth <= 800) {
-                    const aspectRatio = canvasWidth / canvasHeight;
-                    const newWidth = window.innerWidth;
-                    const newHeight = newWidth / aspectRatio;
-                    
-                    canvas.style.width = `${newWidth}px`;
-                    canvas.style.height = `${newHeight}px`;
-                } else {
-                    canvas.style.width = `${canvasWidth}px`;
-                    canvas.style.height = `${canvasHeight}px`;
-                }
-            }
-
-            // --- Event Listeners ---
-            window.addEventListener('keydown', (e) => { keys[e.key] = true; if(e.key === ' ') e.preventDefault(); });
-            window.addEventListener('keyup', (e) => { keys[e.key] = false; });
-            window.addEventListener('resize', handleResize);
-            
-            // Mobile Controls
-            const leftBtn = document.getElementById('leftBtn');
-            const rightBtn = document.getElementById('rightBtn');
-            const fireBtn = document.getElementById('fireBtn');
-
-            leftBtn.addEventListener('touchstart', () => keys['ArrowLeft'] = true);
-            leftBtn.addEventListener('touchend', () => keys['ArrowLeft'] = false);
-            rightBtn.addEventListener('touchstart', () => keys['ArrowRight'] = true);
-            rightBtn.addEventListener('touchend', () => keys['ArrowRight'] = false);
-            fireBtn.addEventListener('touchstart', () => keys[' '] = true);
-            fireBtn.addEventListener('touchend', () => keys[' '] = false);
-
-            // --- Web3 Functions ---
-            const newGameBtn = document.getElementById('newGameBtn');
-            const connectWalletBtn = document.getElementById('connectWalletBtn');
-            const submitScoreBtn = document.getElementById('submitScoreBtn');
-            const exportCsvBtn = document.getElementById('exportCsvBtn');
-            const walletStatusEl = document.getElementById('walletStatus');
-            const leaderboardTableBody = document.querySelector('#leaderboardTable tbody');
-
-            newGameBtn.addEventListener('click', () => {
-                deductArcadeCredits();
-                // Set a flag in sessionStorage to show a reconnect message after reload
-                sessionStorage.setItem('omegaInvadersNewGame', '1');
-                location.reload();
+            // Draw stars
+            ctx.fillStyle = 'white';
+            stars.forEach(star => {
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                ctx.fill();
             });
-            connectWalletBtn.addEventListener('click', connectWallet);
-            submitScoreBtn.addEventListener('click', submitScore);
-            exportCsvBtn.addEventListener('click', exportLeaderboardToCSV);
-            
-            async function connectWallet() {
-                if (typeof window.ethereum !== 'undefined') {
-                    try {
-                        provider = new ethers.providers.Web3Provider(window.ethereum);
-                        await provider.send("eth_requestAccounts", []);
-                        signer = provider.getSigner();
-                        const walletAddress = await signer.getAddress();
-                        walletStatusEl.textContent = `Connected: ${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}`;
-                        contract = new ethers.Contract(contractAddress, contractABI, signer);
-                        connectWalletBtn.disabled = true;
-                        fetchLeaderboard();
-                    } catch (error) {
-                        console.error("Connection failed:", error);
-                        walletStatusEl.textContent = "Connection Failed";
-                    }
-                } else {
-                    walletStatusEl.textContent = "MetaMask not found!";
-                }
+
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 1.5;
+
+            // Draw ship
+            const a = ship.angle;
+            const r = ship.radius;
+            ctx.beginPath();
+            ctx.moveTo( // nose
+                ship.x + 4 / 3 * r * Math.cos(a),
+                ship.y - 4 / 3 * r * Math.sin(a)
+            );
+            ctx.lineTo( // rear left
+                ship.x - r * (2 / 3 * Math.cos(a) + Math.sin(a)),
+                ship.y + r * (2 / 3 * Math.sin(a) - Math.cos(a))
+            );
+             ctx.lineTo( // tail indent
+                ship.x - r * (1 / 3 * Math.cos(a)),
+                ship.y + r * (1 / 3 * Math.sin(a))
+            );
+            ctx.lineTo( // rear right
+                ship.x - r * (2 / 3 * Math.cos(a) - Math.sin(a)),
+                ship.y + r * (2 / 3 * Math.sin(a) + Math.cos(a))
+            );
+            ctx.closePath();
+            ctx.stroke();
+
+            // Draw thrust flame
+            if (ship.thrusting) {
+                ctx.fillStyle = 'orange';
+                ctx.strokeStyle = 'yellow';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                // Flame starts from indent
+                ctx.moveTo(
+                     ship.x - r * (1 / 3 * Math.cos(a)),
+                     ship.y + r * (1 / 3 * Math.sin(a))
+                );
+                // Two outer points of the flame
+                 ctx.lineTo(
+                    ship.x - r * (0.8 * Math.cos(a) + 0.5 * Math.sin(a)),
+                    ship.y + r * (0.8 * Math.sin(a) - 0.5 * Math.cos(a))
+                );
+                // Tip of the flame
+                ctx.lineTo(
+                    ship.x - r * 1.5 * Math.cos(a),
+                    ship.y + r * 1.5 * Math.sin(a)
+                );
+                ctx.lineTo(
+                    ship.x - r * (0.8 * Math.cos(a) - 0.5 * Math.sin(a)),
+                    ship.y + r * (0.8 * Math.sin(a) + 0.5 * Math.cos(a))
+                );
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
             }
 
-            async function submitScore() {
-                if (!contract || !signer) {
-                    alert("Please connect your wallet first.");
-                    return;
+            // Draw bullets
+            bullets.forEach(bullet => {
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(bullet.x, bullet.y, 2, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // Draw asteroids
+            asteroids.forEach(ast => {
+                ctx.beginPath();
+                ctx.moveTo(ast.x + ast.radius * Math.cos(0), ast.y + ast.radius * Math.sin(0));
+                for(let i = 1; i <= ast.vert; i++) {
+                    ctx.lineTo(
+                        ast.x + ast.radius * Math.cos(i * 2 * Math.PI / ast.vert), 
+                        ast.y + ast.radius * Math.sin(i * 2 * Math.PI / ast.vert)
+                    );
                 }
-                submitScoreBtn.disabled = true;
+                ctx.closePath();
+                ctx.stroke();
+            });
+        }
+        
+        function setGameState(state) {
+            if (state === 'over') {
+                endGame(`Final Score: ${score}`);
+            } else if (state === 'start') {
+                startOverlay.style.display = 'block';
+                messageBox.style.display = 'none';
+                document.getElementById('gameOverButtons').style.display = 'none';
+                submitScoreBtn.style.display = 'none';
+            } else if (state === 'playing') {
+                startOverlay.style.display = 'none';
+                messageBox.style.display = 'none';
+                document.getElementById('gameOverButtons').style.display = 'none';
+                submitScoreBtn.style.display = 'none';
+            }
+        }
+
+        function endGame(message) {
+            gameOver = true;
+            gameRunning = false;
+            if (messageBoxTimeout) {
+                clearTimeout(messageBoxTimeout);
+                messageBoxTimeout = null;
+            }
+            messageTitle.textContent = 'Game Over';
+            messageText.textContent = message;
+            document.getElementById('gameOverButtons').style.display = 'flex';
+            actionButton.style.display = 'none';
+            messageBox.style.display = 'block';
+            // Show Submit Score only if not Free Play
+            const freePlay = localStorage.getItem('omega_arcade_freeplay') === 'true';
+            if (!freePlay) {
+                submitScoreBtn.style.display = 'block';
+                submitScoreBtn.disabled = false;
+            } else {
+                submitScoreBtn.style.display = 'none';
+            }
+            // Fix Play Again button to fully reset the game
+            if (playAgainBtn) {
+                playAgainBtn.onclick = () => {
+                    messageBox.style.display = 'none';
+                    submitScoreBtn.style.display = 'none';
+                    document.getElementById('gameOverButtons').style.display = 'none';
+                    resetGame();
+                    gameOver = false;
+                    gameRunning = true;
+                    gameState = 'playing';
+                    lastTime = 0;
+                    requestAnimationFrame(gameLoop);
+                };
+            }
+            if (returnArcadeBtn) {
+                returnArcadeBtn.onclick = () => {
+                    window.location.href = 'https://arcade.omeganetwork.co/';
+                };
+            }
+        }
+
+        function gameLoop(timestamp) {
+            if (!lastTime) lastTime = timestamp;
+            const deltaTime = (timestamp - lastTime) / 1000;
+            lastTime = timestamp;
+
+            if (gameState === 'playing') {
+                update(deltaTime);
+            }
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        document.getElementById('actionButton').onclick = () => {
+            document.getElementById('messageBox').style.display = 'none';
+            createAsteroids(5);
+            setGameState('playing');
+            gameLoop(0);
+        };
+        
+        // Controls
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case 'ArrowUp': keys.up = true; break;
+                case 'ArrowLeft': keys.left = true; break;
+                case 'ArrowRight': keys.right = true; break;
+                case ' ': keys.space = true; break;
+            }
+        });
+        document.addEventListener('keyup', (e) => {
+            switch(e.key) {
+                case 'ArrowUp': keys.up = false; break;
+                case 'ArrowLeft': keys.left = false; break;
+                case 'ArrowRight': keys.right = false; break;
+                case ' ': keys.space = false; break;
+            }
+        });
+
+        // Web3
+        const contractAddress = "0x3c71c20044682ac66fcdb9a608387556399b04ec";
+        const contractABI = [
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "player",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "score",
+				"type": "uint256"
+			}
+		],
+		"name": "ScoreSubmitted",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_score",
+				"type": "uint256"
+			}
+		],
+		"name": "submitScore",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getLeaderboard",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "address",
+						"name": "player",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "score",
+						"type": "uint256"
+					}
+				],
+				"internalType": "struct Leaderboard.ScoreEntry[]",
+				"name": "",
+				"type": "tuple[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getPlayerCount",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "highScores",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "players",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+];
+        const connectWalletBtn = document.getElementById('connectWalletBtn');
+        const exportCsvBtn = document.getElementById('exportCsvBtn');
+
+        async function connectWallet() {
+             if (typeof ethers === 'undefined') {
+                walletStatusP.textContent = 'Ethers.js not loaded. Please refresh.';
+                return;
+            }
+            if (typeof window.ethereum === 'undefined') {
+                walletStatusP.textContent = 'Please install MetaMask!';
+                return;
+            }
+            try {
+                await window.ethereum.request({ method: 'eth_requestAccounts' });
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                signer = provider.getSigner();
+                userAddress = await signer.getAddress();
+                contract = new ethers.Contract(contractAddress, contractABI, signer);
+                walletStatusP.textContent = `Connected: ${userAddress.substring(0, 6)}...`;
+                connectWalletBtn.textContent = 'Wallet Connected';
+                fetchLeaderboard();
+            } catch (error) {
+                walletStatusP.textContent = 'Connection failed.';
+                console.error(error);
+            }
+        }
+
+        async function submitScore() {
+            if (!contract) { walletStatusP.textContent = 'Connect wallet first.'; return; }
+            try {
                 submitScoreBtn.textContent = 'Submitting...';
-                try {
-                    const tx = await contract.submitScore(score);
-                    await tx.wait();
-                    alert("Score submitted successfully!");
-                    fetchLeaderboard();
-                } catch (error) {
-                    console.error("Score submission failed:", error);
-                    alert("Score submission failed. See console for details.");
-                } finally {
-                    submitScoreBtn.disabled = false;
-                    submitScoreBtn.textContent = 'Submit Score';
-                }
+                const tx = await contract.submitScore(score);
+                await tx.wait();
+                alert('Score Submitted!');
+                fetchLeaderboard();
+            } catch (error) {
+                alert('Submission Failed.');
+                console.error(error);
+            } finally {
+                submitScoreBtn.textContent = 'Submit Score';
+                submitScoreBtn.style.display = 'none';
             }
-            
-            async function fetchLeaderboard() {
-                if (!provider && typeof window.ethereum === 'undefined') {
-                    alert("Please install MetaMask to view the leaderboard.");
-                    return;
-                }
-                 if (!contract) {
-                    const tempProvider = new ethers.providers.Web3Provider(window.ethereum);
-                    contract = new ethers.Contract(contractAddress, contractABI, tempProvider);
-                }
+        }
 
-                leaderboardTableBody.innerHTML = '<tr><td colspan="3">Loading...</td></tr>';
-                try {
-                    const scores = await contract.getLeaderboard();
-                    leaderboardTableBody.innerHTML = ''; // Clear loading message
-                    if (scores.length === 0) {
-                        leaderboardTableBody.innerHTML = '<tr><td colspan="3">No scores yet.</td></tr>';
-                        return;
-                    }
-                    scores.forEach((entry, index) => {
-                        const tr = document.createElement('tr');
-                        const playerAddress = `${entry.player.substring(0, 6)}...${entry.player.substring(entry.player.length - 4)}`;
-                        tr.innerHTML = `<td>${index + 1}</td><td>${playerAddress}</td><td>${entry.score.toString()}</td>`;
-                        leaderboardTableBody.appendChild(tr);
-                    });
-                } catch (error) {
-                    console.error("Failed to fetch leaderboard:", error);
-                    leaderboardTableBody.innerHTML = '<tr><td colspan="3">Failed to load.</td></tr>';
-                }
-            }
-
-            function exportLeaderboardToCSV() {
-                const rows = leaderboardTableBody.querySelectorAll('tr');
-                if (rows.length === 0 || rows[0].textContent.includes("No scores")) {
-                    alert("No leaderboard data to export.");
-                    return;
-                }
-                let csvContent = "data:text/csv;charset=utf-8,";
-                csvContent += "Rank,Player,Score\r\n";
-                rows.forEach(row => {
-                    const cols = row.querySelectorAll('td');
-                    const rowData = Array.from(cols).map(col => `"${col.innerText}"`).join(",");
-                    csvContent += rowData + "\r\n";
+        async function fetchLeaderboard() {
+            let readonlyProvider = new ethers.providers.JsonRpcProvider('https://mainnet.aurora.dev');
+            const readonlyContract = new ethers.Contract(contractAddress, contractABI, readonlyProvider);
+            try {
+                const board = await readonlyContract.getLeaderboard();
+                const sorted = [...board].sort((a, b) => b.score - a.score);
+                leaderboardBody.innerHTML = '';
+                sorted.slice(0, 10).forEach((entry, i) => {
+                    const row = leaderboardBody.insertRow();
+                    row.innerHTML = `<td>${i+1}</td><td>${entry.player.substring(0,6)}...</td><td>${entry.score.toString()}</td>`;
                 });
-                const encodedUri = encodeURI(csvContent);
+            } catch (error) {
+                console.error("Leaderboard fetch failed:", error);
+            }
+        }
+        
+        async function exportLeaderboardToCsv() {
+             if (!contract) { alert("Please connect your wallet first."); return; }
+             exportCsvBtn.disabled = true;
+             exportCsvBtn.textContent = 'Exporting...';
+             try {
+                const board = await contract.getLeaderboard();
+                const sorted = [...board].sort((a, b) => b.score - a.score);
+                let csv = "Rank,Player,Score\n";
+                sorted.forEach((entry, i) => {
+                    csv += `${i+1},${entry.player},${entry.score.toString()}\n`;
+                });
+                const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csv);
                 const link = document.createElement("a");
                 link.setAttribute("href", encodedUri);
-                link.setAttribute("download", "omega_invaders_leaderboard.csv");
+                link.setAttribute("download", "astro-omega-leaderboard.csv");
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
-            }
+             } catch(e) {
+                 alert('Export failed.');
+                 console.error(e);
+             } finally {
+                exportCsvBtn.disabled = false;
+                exportCsvBtn.textContent = 'Export CSV';
+             }
+        }
 
-            // Show reconnect message if page was reloaded for new game
-            if (sessionStorage.getItem('omegaInvadersNewGame') === '1') {
-                showMessage('New game started! Please reconnect your wallet for Web3 features.', 3000);
-                sessionStorage.removeItem('omegaInvadersNewGame');
-            }
+        // Mobile Controls
+        const leftBtn = document.getElementById('leftBtn');
+        const rightBtn = document.getElementById('rightBtn');
+        const thrustBtn = document.getElementById('thrustBtn');
+        const fireBtn = document.getElementById('fireBtn');
 
-            // Initial setup
-            handleResize();
-            initGame();
+        function handleTouch(btn, key, isDown) {
+            btn.addEventListener('touchstart', (e) => { e.preventDefault(); keys[key] = isDown; }, { passive: false });
+            btn.addEventListener('touchend', (e) => { e.preventDefault(); keys[key] = !isDown; }, { passive: false });
+            btn.addEventListener('mousedown', (e) => { e.preventDefault(); keys[key] = isDown; });
+            btn.addEventListener('mouseup', (e) => { e.preventDefault(); keys[key] = !isDown; });
+        }
+        handleTouch(leftBtn, 'left', true);
+        handleTouch(rightBtn, 'right', true);
+        handleTouch(thrustBtn, 'up', true);
+        handleTouch(fireBtn, 'space', true);
+        handleTouch(leftBtn, 'left', false);
+        handleTouch(rightBtn, 'right', false);
+        handleTouch(thrustBtn, 'up', false);
+        handleTouch(fireBtn, 'space', false);
+
+        connectWalletBtn.addEventListener('click', connectWallet);
+        submitScoreBtn.addEventListener('click', submitScore);
+        exportCsvBtn.addEventListener('click', exportLeaderboardToCsv);
+
+        // Start overlay click logic
+        startOverlay.addEventListener('click', async () => {
+            const credits = parseInt(localStorage.getItem('omega_arcade_credits') || '0', 10);
+            const freePlay = localStorage.getItem('omega_arcade_freeplay') === 'true';
+            if (!freePlay && (!credits || credits < 5)) {
+                startOverlay.innerHTML = '<h2>Not enough credits!</h2><p>Need 5 tokens to play</p>';
+                setTimeout(() => { 
+                    startOverlay.innerHTML = '<h2>Start Game</h2><p>Click to begin</p>'; 
+                }, 2000);
+                return;
+            }
+            if (!freePlay) {
+                localStorage.setItem('omega_arcade_credits', Math.max(0, credits - 5));
+            }
+            startOverlay.style.display = 'none';
+            resetGame();
+            gameOver = false;
+            gameRunning = true;
+            gameState = 'playing';
+            lastTime = 0;
+            requestAnimationFrame(gameLoop);
         });
+
+        createStars();
+        setGameState('start');
+        requestAnimationFrame(gameLoop);
+    });
     </script>
 </body>
-</html>
+</html> 
