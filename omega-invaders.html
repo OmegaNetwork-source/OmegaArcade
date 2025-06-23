@@ -176,6 +176,7 @@
         <div class="game-wrapper">
             <canvas id="gameCanvas"></canvas>
             <div id="messageBox" class="message-box"></div>
+            <div id="startOverlay" class="message-box" style="display:block; cursor:pointer; z-index:100;">Start Game</div>
         </div>
         <div class="ui-panel">
             <h1>Omega Invaders</h1>
@@ -191,7 +192,6 @@
                 <p id="walletStatus">Not Connected</p>
             </div>
 
-            <button id="newGameBtn">New Game</button>
             <button id="connectWalletBtn">Connect Wallet</button>
             <button id="submitScoreBtn" disabled>Submit Score</button>
 
@@ -394,12 +394,23 @@
                 }
             ];
 
+            // Track showMessage timeout globally
+            let messageBoxTimeout = null;
+
             function showMessage(text, duration = 2000) {
                 messageBox.textContent = text;
                 messageBox.style.display = 'block';
+                if (messageBoxTimeout) {
+                    clearTimeout(messageBoxTimeout);
+                    messageBoxTimeout = null;
+                }
                 if (duration > 0) {
-                    setTimeout(() => {
-                        messageBox.style.display = 'none';
+                    messageBoxTimeout = setTimeout(() => {
+                        // Only hide if not game over
+                        if (!gameOver) {
+                            messageBox.style.display = 'none';
+                        }
+                        messageBoxTimeout = null;
                     }, duration);
                 }
             }
@@ -410,6 +421,11 @@
                     cancelAnimationFrame(animationFrameId);
                     animationFrameId = null;
                 }
+                // Clear any pending messageBox timeout
+                if (messageBoxTimeout) {
+                    clearTimeout(messageBoxTimeout);
+                    messageBoxTimeout = null;
+                }
                 score = 0;
                 lives = 3;
                 wave = 1;
@@ -418,7 +434,7 @@
                 initWave();
                 updateUI();
                 messageBox.style.display = 'none';
-                lastTime = 0;
+                lastTime = performance.now();
                 animationFrameId = requestAnimationFrame(gameLoop);
             }
 
@@ -471,7 +487,14 @@
                 scoreEl.textContent = score;
                 livesEl.textContent = lives;
                 waveEl.textContent = wave;
+                const freePlay = localStorage.getItem('omega_arcade_freeplay') === 'true';
                 document.getElementById('submitScoreBtn').disabled = gameOver ? false : true;
+                if (freePlay) {
+                    submitScoreBtn.disabled = true;
+                    submitScoreBtn.title = 'Score submission is disabled in Free Play mode.';
+                } else {
+                    submitScoreBtn.title = '';
+                }
             }
 
             function checkCollisions() {
@@ -538,8 +561,32 @@
             function endGame(message) {
                 gameOver = true;
                 gameRunning = false;
-                showMessage(message, 0);
+                // Clear any pending messageBox timeout
+                if (messageBoxTimeout) {
+                    clearTimeout(messageBoxTimeout);
+                    messageBoxTimeout = null;
+                }
+                // Show Play Again and Return to Arcade buttons, aligned and centered
+                messageBox.innerHTML = `<div>${message}</div><div style='display:flex; justify-content:center; gap:16px; margin-top:20px;'>
+                    <button id='playAgainBtn'>Play Again</button>
+                    <button id='returnArcadeBtn'>Return to Arcade</button>
+                </div>`;
+                messageBox.style.display = 'block';
                 updateUI();
+                // Add event listeners for the buttons
+                const playAgainBtn = document.getElementById('playAgainBtn');
+                const returnArcadeBtn = document.getElementById('returnArcadeBtn');
+                if (playAgainBtn) {
+                    playAgainBtn.onclick = () => {
+                        messageBox.style.display = 'none';
+                        startOverlay.style.display = 'block';
+                    };
+                }
+                if (returnArcadeBtn) {
+                    returnArcadeBtn.onclick = () => {
+                        window.location.href = 'arcade-entry.html';
+                    };
+                }
             }
 
             function update(deltaTime) {
@@ -691,96 +738,114 @@
             fireBtn.addEventListener('touchend', () => keys[' '] = false);
 
             // --- Web3 Functions ---
-            const newGameBtn = document.getElementById('newGameBtn');
+            const startOverlay = document.getElementById('startOverlay');
             const connectWalletBtn = document.getElementById('connectWalletBtn');
             const submitScoreBtn = document.getElementById('submitScoreBtn');
             const exportCsvBtn = document.getElementById('exportCsvBtn');
             const walletStatusEl = document.getElementById('walletStatus');
             const leaderboardTableBody = document.querySelector('#leaderboardTable tbody');
 
-            // Arcade credit check: redirect if not enough credits, unless Free Play is active
-            (function() {
-                const credits = parseInt(localStorage.getItem('omega_arcade_credits') || '0', 10);
-                const freePlay = localStorage.getItem('omega_arcade_freeplay') === 'true';
-                if ((!credits || credits < 5) && !freePlay) {
-                    window.location.href = '/';
-                }
-            })();
+            let walletConnected = false;
 
-            // Deduct 5 credits on new game start (only in token mode)
-            function deductArcadeCredits() {
-                let credits = parseInt(localStorage.getItem('omega_arcade_credits') || '0', 10);
-                credits = Math.max(0, credits - 5);
-                localStorage.setItem('omega_arcade_credits', credits);
-            }
-
-            let awaitingFreePlayStart = false;
-
-            function showFreePlayPrompt() {
-                messageBox.innerHTML = "<span style='color:#4caf50;font-weight:bold;'>Free Play Mode</span><br>Click or Tap to Start.";
-                messageBox.style.display = 'block';
-                awaitingFreePlayStart = true;
-            }
-
-            function showFreePlaySecondPrompt() {
-                messageBox.innerHTML = "<span style='color:#4caf50;font-weight:bold;'>Free Play Mode</span><br>Click or Tap again to begin!";
-                messageBox.style.display = 'block';
-            }
-
-            function hidePrompt() {
-                messageBox.style.display = 'none';
-            }
-
-            // Overwrite New Game logic for Free Play
-            newGameBtn.addEventListener('click', () => {
-                const freePlay = localStorage.getItem('omega_arcade_freeplay') === 'true';
-                if (freePlay) {
-                    showFreePlayPrompt();
+            // --- Wallet Connection Logic ---
+            async function checkWalletConnection() {
+                if (typeof window.ethereum !== 'undefined') {
+                    provider = new ethers.providers.Web3Provider(window.ethereum);
+                    const accounts = await provider.listAccounts();
+                    if (accounts.length > 0) {
+                        signer = provider.getSigner();
+                        walletConnected = true;
+                        connectWalletBtn.disabled = true;
+                        connectWalletBtn.textContent = 'Connected';
+                        const walletAddress = await signer.getAddress();
+                        walletStatusEl.textContent = `Connected: ${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}`;
+                        contract = new ethers.Contract(contractAddress, contractABI, signer);
+                        fetchLeaderboard();
+                        // Update submit button state
+                        updateUI();
+                    } else {
+                        walletConnected = false;
+                        connectWalletBtn.disabled = false;
+                        connectWalletBtn.textContent = 'Connect Wallet';
+                        walletStatusEl.textContent = 'Not Connected';
+                    }
                 } else {
-                    deductArcadeCredits();
-                    sessionStorage.setItem('omegaInvadersNewGame', '1');
-                    location.reload();
+                    walletStatusEl.textContent = 'MetaMask not found!';
+                    connectWalletBtn.disabled = false;
+                    connectWalletBtn.textContent = 'Connect Wallet';
+                    walletConnected = false;
                 }
-            });
+            }
 
-            // Listen for click/tap on the prompt in Free Play
-            messageBox.addEventListener('click', () => {
-                if (awaitingFreePlayStart) {
-                    showFreePlaySecondPrompt();
-                    awaitingFreePlayStart = false;
-                } else if (messageBox.style.display === 'block') {
-                    hidePrompt();
-                    // Set a flag in sessionStorage to show a reconnect message after reload
-                    sessionStorage.setItem('omegaInvadersNewGame', '1');
-                    location.reload();
-                }
-            });
-
-            connectWalletBtn.addEventListener('click', connectWallet);
-            submitScoreBtn.addEventListener('click', submitScore);
-            exportCsvBtn.addEventListener('click', exportLeaderboardToCSV);
-            
-            async function connectWallet() {
+            connectWalletBtn.addEventListener('click', async () => {
                 if (typeof window.ethereum !== 'undefined') {
                     try {
                         provider = new ethers.providers.Web3Provider(window.ethereum);
                         await provider.send("eth_requestAccounts", []);
                         signer = provider.getSigner();
+                        walletConnected = true;
                         const walletAddress = await signer.getAddress();
                         walletStatusEl.textContent = `Connected: ${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}`;
                         contract = new ethers.Contract(contractAddress, contractABI, signer);
                         connectWalletBtn.disabled = true;
+                        connectWalletBtn.textContent = 'Connected';
                         fetchLeaderboard();
+                        // Update submit button state
+                        updateUI();
                     } catch (error) {
                         console.error("Connection failed:", error);
                         walletStatusEl.textContent = "Connection Failed";
+                        walletConnected = false;
+                        connectWalletBtn.disabled = false;
+                        connectWalletBtn.textContent = 'Connect Wallet';
                     }
                 } else {
                     walletStatusEl.textContent = "MetaMask not found!";
+                    walletConnected = false;
+                    connectWalletBtn.disabled = false;
+                    connectWalletBtn.textContent = 'Connect Wallet';
                 }
-            }
+            });
 
+            startOverlay.addEventListener('click', async () => {
+                const credits = parseInt(localStorage.getItem('omega_arcade_credits') || '0', 10);
+                const freePlay = localStorage.getItem('omega_arcade_freeplay') === 'true';
+                if (!walletConnected) {
+                    await connectWalletBtn.click();
+                    return;
+                }
+                if (!freePlay && (!credits || credits < 5)) {
+                    startOverlay.textContent = 'Not enough credits!';
+                    setTimeout(() => { startOverlay.textContent = 'Start Game'; }, 2000);
+                    return;
+                }
+                if (!freePlay) {
+                    localStorage.setItem('omega_arcade_credits', Math.max(0, credits - 5));
+                }
+                startOverlay.style.display = 'none';
+                initGame();
+            });
+
+            // Remove all overlay show/hide logic, always show overlay until game starts
+            // Arcade credit check: redirect if not enough credits, unless Free Play is active
+            (function() {
+                const credits = parseInt(localStorage.getItem('omega_arcade_credits') || '0', 10);
+                const freePlay = localStorage.getItem('omega_arcade_freeplay') === 'true';
+                if ((!credits || credits < 5) && !freePlay) {
+                    // Do not redirect, let overlay handle the message
+                }
+            })();
+
+            // On load, check wallet
+            checkWalletConnection();
+
+            // Add back the missing functions
             async function submitScore() {
+                const freePlay = localStorage.getItem('omega_arcade_freeplay') === 'true';
+                if (freePlay) {
+                    alert('Score submission is disabled in Free Play mode.');
+                    return;
+                }
                 if (!contract || !signer) {
                     alert("Please connect your wallet first.");
                     return;
@@ -853,18 +918,12 @@
                 document.body.removeChild(link);
             }
 
-            // Show reconnect message if page was reloaded for new game
-            if (sessionStorage.getItem('omegaInvadersNewGame') === '1') {
-                showMessage('New game started! Please reconnect your wallet for Web3 features.', 3000);
-                sessionStorage.removeItem('omegaInvadersNewGame');
-                // Actually start the game after reload
-                setTimeout(() => { initGame(); }, 1000);
-            }
+            // Wire up the submit score and export buttons
+            submitScoreBtn.addEventListener('click', submitScore);
+            exportCsvBtn.addEventListener('click', exportLeaderboardToCSV);
 
             // Initial setup
             handleResize();
-            // Do not call initGame() automatically; only after user starts
-            // initGame();
         });
     </script>
 </body>
