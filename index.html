@@ -773,6 +773,9 @@
         transition: opacity 0.4s, transform 0.4s;
         opacity: 0;
         pointer-events: none;
+        justify-content: center;
+        align-items: center;
+        padding: 32px 8px 48px 8px;
       }
       .carousel-machine.active {
         opacity: 1;
@@ -820,6 +823,47 @@
         border-radius: 8px;
         padding: 4px 16px;
         margin: 0 8px;
+      }
+      .carousel-machine .arcade-title, .carousel-machine .arcade-game-title {
+        font-size: 2.1rem !important;
+        font-weight: 900;
+        margin-bottom: 24px;
+        text-align: center;
+        letter-spacing: 0.04em;
+        text-shadow: 0 2px 16px #000, 0 0 2px #fff;
+      }
+      .carousel-machine .play-btn, .carousel-machine button.play-btn {
+        font-size: 1.4rem !important;
+        padding: 18px 44px !important;
+        margin: 24px auto 0 auto !important;
+        display: block;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px #000a;
+      }
+      .carousel-machine .token-label, .carousel-machine .free-play-label {
+        font-size: 1.3rem !important;
+        margin-bottom: 18px;
+        text-align: center;
+      }
+      .carousel-machine .arcade-controls-up {
+        margin: 24px auto 0 auto;
+      }
+      .carousel-status {
+        margin-bottom: 18px !important;
+      }
+      .footer {
+        position: fixed;
+        left: 0; right: 0; bottom: 0;
+        width: 100vw;
+        background: #181818;
+        z-index: 10000;
+        text-align: center;
+        font-size: 1rem;
+        padding: 12px 0 10px 0;
+        box-shadow: 0 -2px 12px #000a;
+      }
+      body {
+        padding-bottom: 60px !important;
       }
     }
     @media (min-width: 601px) {
