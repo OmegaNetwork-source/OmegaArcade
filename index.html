@@ -738,47 +738,88 @@
       animation: blink 1s infinite alternate;
     }
     @media (max-width: 600px) {
-      .wallet-panel {
-        position: static !important;
-        width: 100vw;
-        min-width: unset;
-        border-radius: 0 0 16px 16px;
-        margin: 0 auto 8px auto;
-        padding: 8px 4vw 8px 4vw;
-        box-sizing: border-box;
-        z-index: 1000;
-        font-size: 1rem;
-        top: 0;
-        left: 0;
-        right: 0;
-      }
-      .arcade-container {
-        margin-top: 0 !important;
-        padding-top: 0 !important;
-      }
-      .omega-title {
-        margin-top: 8px;
-        margin-bottom: 12px;
-      }
+      .arcade-grid { display: none !important; }
       #arcade-carousel {
-        margin-top: 12px;
-      }
-      .carousel-machine {
-        min-height: 62vh;
         display: flex;
         flex-direction: column;
-        justify-content: center;
         align-items: center;
-        background: rgba(24,24,24,0.92);
-        border-radius: 18px;
-        box-shadow: 0 0 32px #0008, 0 0 0 2px #fff2;
-        padding: 18px 4vw 24px 4vw;
-        margin: 0 auto 16px auto;
-        width: 98vw;
-        max-width: 420px;
+        width: 100vw;
+        min-height: 80vh;
+        height: calc(100vh - 120px); /* leave space for wallet/footer */
+        margin: 0 auto 12px auto;
+        position: relative;
+        overflow: hidden;
+        background: #181818;
+        border-radius: 0 0 24px 24px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        justify-content: center;
       }
-      #mobile-disclaimer-modal {
+      .carousel-machine {
+        width: 98vw;
+        max-width: 440px;
+        min-height: 68vh;
+        height: 100%;
+        margin: 0 auto;
         display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #111;
+        border-radius: 18px;
+        box-shadow: 0 0 32px #000a;
+        position: absolute;
+        left: 0; right: 0; top: 0; bottom: 0;
+        z-index: 2;
+        transition: opacity 0.4s, transform 0.4s;
+        opacity: 0;
+        pointer-events: none;
+      }
+      .carousel-machine.active {
+        opacity: 1;
+        pointer-events: auto;
+        transform: scale(1);
+        z-index: 3;
+      }
+      .carousel-nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100vw;
+        max-width: 440px;
+        margin: 0 auto 8px auto;
+        position: absolute;
+        bottom: 12px;
+        left: 0; right: 0;
+        z-index: 10;
+      }
+      .carousel-arrow {
+        background: #222;
+        color: #fff;
+        border: none;
+        border-radius: 50%;
+        width: 44px;
+        height: 44px;
+        font-size: 2rem;
+        font-weight: bold;
+        box-shadow: 0 2px 8px #000a;
+        cursor: pointer;
+        opacity: 0.85;
+        transition: background 0.2s, color 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .carousel-arrow:active {
+        background: #444;
+      }
+      .carousel-index {
+        color: #aaa;
+        font-size: 1rem;
+        font-weight: 600;
+        background: #181818;
+        border-radius: 8px;
+        padding: 4px 16px;
+        margin: 0 8px;
       }
     }
     @media (min-width: 601px) {
@@ -1034,6 +1075,14 @@
       <button class="disclaimer-btn" id="dismissDisclaimerBtn">I Understand</button>
     </div>
   </div>
+  <div id="arcade-carousel" style="display:none;">
+    <!-- Carousel machines will be injected here by JS -->
+    <div class="carousel-nav">
+      <button class="carousel-arrow" id="carouselPrev">&#8592;</button>
+      <span class="carousel-index" id="carouselIndex"></span>
+      <button class="carousel-arrow" id="carouselNext">&#8594;</button>
+    </div>
+  </div>
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script>
     // --- Config ---
@@ -1208,50 +1257,45 @@
     };
     // --- Init ---
     loadState();
-    // Carousel logic for mobile
-    document.addEventListener('DOMContentLoaded', function() {
-      const machines = Array.from(document.querySelectorAll('.arcade-machine'));
-      if (!machines.length) return;
-      // Only activate on mobile
+    // Mobile carousel logic
+    const arcadeMachines = Array.from(document.querySelectorAll('.arcade-machine'));
+    function setupMobileCarousel() {
       if (window.innerWidth > 600) return;
-      // Hide grid, show carousel
-      let carousel = document.getElementById('arcade-carousel');
-      if (!carousel) {
-        carousel = document.createElement('div');
-        carousel.id = 'arcade-carousel';
-        document.querySelector('.arcade-container').appendChild(carousel);
-      }
-      // Remove any previous content
+      const carousel = document.getElementById('arcade-carousel');
+      if (!carousel) return;
+      // Move all arcade machines into the carousel
+      arcadeMachines.forEach(m => m.parentNode && m.parentNode.removeChild(m));
       carousel.innerHTML = '';
-      // Navigation
+      arcadeMachines.forEach((machine, i) => {
+        machine.classList.add('carousel-machine');
+        machine.classList.remove('active');
+        carousel.appendChild(machine);
+      });
+      // Add nav
+      const nav = document.createElement('div');
+      nav.className = 'carousel-nav';
+      nav.innerHTML = `<button class="carousel-arrow" id="carouselPrev">&#8592;</button><span class="carousel-index" id="carouselIndex"></span><button class="carousel-arrow" id="carouselNext">&#8594;</button>`;
+      carousel.appendChild(nav);
       let current = 0;
       function showMachine(idx) {
-        carousel.innerHTML = '';
-        // Nav arrows
-        const nav = document.createElement('div');
-        nav.className = 'carousel-nav';
-        const left = document.createElement('button');
-        left.className = 'carousel-arrow';
-        left.innerHTML = '&#8592;';
-        left.onclick = () => { current = (current-1+machines.length)%machines.length; showMachine(current); };
-        const right = document.createElement('button');
-        right.className = 'carousel-arrow';
-        right.innerHTML = '&#8594;';
-        right.onclick = () => { current = (current+1)%machines.length; showMachine(current); };
-        const idxText = document.createElement('span');
-        idxText.className = 'carousel-index';
-        idxText.textContent = `${idx+1} / ${machines.length}`;
-        nav.appendChild(left);
-        nav.appendChild(idxText);
-        nav.appendChild(right);
-        carousel.appendChild(nav);
-        // Clone and show machine
-        const clone = machines[idx].cloneNode(true);
-        clone.classList.add('carousel-machine');
-        carousel.appendChild(clone);
+        arcadeMachines.forEach((m, i) => {
+          m.classList.toggle('active', i === idx);
+        });
+        document.getElementById('carouselIndex').textContent = `${idx+1} / ${arcadeMachines.length}`;
       }
+      document.getElementById('carouselPrev').onclick = () => {
+        current = (current - 1 + arcadeMachines.length) % arcadeMachines.length;
+        showMachine(current);
+      };
+      document.getElementById('carouselNext').onclick = () => {
+        current = (current + 1) % arcadeMachines.length;
+        showMachine(current);
+      };
       showMachine(current);
-    });
+      carousel.style.display = 'flex';
+    }
+    window.addEventListener('DOMContentLoaded', setupMobileCarousel);
+    window.addEventListener('resize', setupMobileCarousel);
     function showMobileDisclaimerIfNeeded() {
       if (window.innerWidth <= 600) {
         var modal = document.getElementById('mobile-disclaimer-modal');
