@@ -724,6 +724,10 @@
     .status-pending {
       color: #fbbf24;
     }
+    .omega-bets-machine .free-play-label {
+      color: #00ffff;
+      text-shadow: 0 0 8px #00ffff, 0 0 16px #00ffff;
+    }
     .arcade-controls-up {
       position: static;
       margin-top: 12px;
@@ -945,6 +949,27 @@
             <div class="screen-title">Bushido Clan Battle</div>
             <div class="free-play-label">Free Play</div>
             <button class="play-btn" data-url="https://game-pi-rosy.vercel.app/">Play</button>
+          </div>
+          <div class="arcade-controls-up">
+            <div class="joystick"></div>
+            <div class="buttons">
+              <div class="button neon-btn"></div>
+              <div class="button neon-btn"></div>
+            </div>
+          </div>
+          <div class="arcade-status status-operational">
+            <div class="status-indicator"></div>
+            <span>OPERATIONAL</span>
+          </div>
+        </div>
+      </div>
+      <div class="arcade-machine omega-bets-machine" data-game="omega-bets">
+        <div class="arcade-frame">
+          <div class="arcade-screen">
+            <img src="omega-bets-screenshot.png" alt="Omega Racing" class="screen-img" onerror="this.style.display='none'">
+            <div class="screen-title">Omega Racing</div>
+            <div class="free-play-label">BET YOUR TOKENS</div>
+            <button class="play-btn" data-url="https://omegarace.omeganetwork.co/">Play</button>
           </div>
           <div class="arcade-controls-up">
             <div class="joystick"></div>
