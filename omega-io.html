@@ -110,18 +110,21 @@
         </div>
     </div>
     <div class="leaderboard-container">
-        <h2>Leaderboard</h2>
+        <h2>🏆 Unified Leaderboard</h2>
         <table id="leaderboardTable">
             <thead>
-                <tr><th>Rank</th><th>Wallet</th><th>Score</th></tr>
+                <tr><th>Rank</th><th>Wallet</th><th>Score</th><th>Date</th></tr>
             </thead>
             <tbody id="leaderboardBody"></tbody>
         </table>
         <button id="exportCsvBtn" class="web3-btn">Export as CSV</button>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/ethers@5.2.0/dist/ethers.umd.min.js" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <script>
+        // Enable free play mode for easy testing
+        localStorage.setItem('omega_arcade_freeplay', 'true');
+        
         document.addEventListener('DOMContentLoaded', (event) => {
             const canvas = document.getElementById('gameCanvas');
             const ctx = canvas.getContext('2d');
@@ -140,9 +143,117 @@
             const colors = { snake: '#ffffff', snakeHead: '#cccccc', food: '#ffffff', background: '#000000', grid: '#333333', botColors: ['#ff6b6b', '#f9ca24', '#4ecdc4', '#7d5fff', '#ff7f50'] };
             
             let provider, signer, userAddress, contract;
-            const contractAddress = "0xb10eb249e59787c3a644ada15b719247516b7e2c";
-            const contractABI = [ { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "address", "name": "player", "type": "address" }, { "indexed": false, "internalType": "uint256", "name": "score", "type": "uint256" } ], "name": "ScoreSubmitted", "type": "event" }, { "inputs": [ { "internalType": "uint256", "name": "_score", "type": "uint256" } ], "name": "submitScore", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [], "name": "getLeaderboard", "outputs": [ { "components": [ { "internalType": "address", "name": "player", "type": "address" }, { "internalType": "uint256", "name": "score", "type": "uint256" } ], "internalType": "struct Leaderboard.ScoreEntry[]", "name": "", "type": "tuple[]" } ], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "getPlayerCount", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" }, { "inputs": [ { "internalType": "address", "name": "", "type": "address" } ], "name": "highScores", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" }, { "inputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "name": "players", "outputs": [ { "internalType": "address", "name": "", "type": "address" } ], "stateMutability": "view", "type": "function" } ];
-            const auroraChainId = 1313161768;
+            
+            // NEW UNIFIED ARCADE CONTRACT
+            const contractAddress = "0x1a196c1b6c22eb9389e286cc4b12fdebe8663996";
+            const contractABI = [
+                {
+                    "inputs": [
+                        {
+                            "internalType": "enum OmegaArcadeLeaderboard.GameType",
+                            "name": "_gameType",
+                            "type": "uint8"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "_score",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "_username",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "_gameData",
+                            "type": "string"
+                        }
+                    ],
+                    "name": "submitScore",
+                    "outputs": [],
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "enum OmegaArcadeLeaderboard.GameType",
+                            "name": "_gameType",
+                            "type": "uint8"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "_limit",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "getLeaderboard",
+                    "outputs": [
+                        {
+                            "components": [
+                                {
+                                    "internalType": "address",
+                                    "name": "player",
+                                    "type": "address"
+                                },
+                                {
+                                    "internalType": "string",
+                                    "name": "username",
+                                    "type": "string"
+                                },
+                                {
+                                    "internalType": "uint256",
+                                    "name": "score",
+                                    "type": "uint256"
+                                },
+                                {
+                                    "internalType": "uint256",
+                                    "name": "timestamp",
+                                    "type": "uint256"
+                                },
+                                {
+                                    "internalType": "enum OmegaArcadeLeaderboard.GameType",
+                                    "name": "gameType",
+                                    "type": "uint8"
+                                },
+                                {
+                                    "internalType": "string",
+                                    "name": "gameData",
+                                    "type": "string"
+                                }
+                            ],
+                            "internalType": "struct OmegaArcadeLeaderboard.ScoreEntry[]",
+                            "name": "",
+                            "type": "tuple[]"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "",
+                            "type": "address"
+                        }
+                    ],
+                    "name": "playerUsernames",
+                    "outputs": [
+                        {
+                            "internalType": "string",
+                            "name": "",
+                            "type": "string"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function"
+                }
+            ];
+
+            // Game constants for unified leaderboard
+            const GAME_TYPE = 2; // OMEGA_IO in the smart contract enum
     
             const connectWalletBtn = document.getElementById('connectWalletBtn');
             const submitScoreBtn = document.getElementById('submitScoreBtn');
@@ -320,24 +431,52 @@
     
             async function connectWallet() {
                 if (typeof window.ethereum === 'undefined') { 
-                    alert('MetaMask is not detected. Please ensure it is installed and that you are not opening this as a local file (use a local server).'); 
+                    alert('MetaMask is not detected. Please ensure it is installed.'); 
                     return; 
                 }
                 try {
+                    await window.ethereum.request({ method: 'eth_requestAccounts' });
                     provider = new ethers.providers.Web3Provider(window.ethereum);
-                    const network = await provider.getNetwork();
-                    if (network.chainId !== auroraChainId) { 
-                        alert(`Please switch to the Aurora Network (Chain ID ${auroraChainId}) in MetaMask.`); 
-                        return; 
+                    
+                    // Check if we're on Omega Network, if not, switch
+                    const chainId = await provider.getNetwork().then(n => n.chainId);
+                    const OMEGA_CHAIN_ID = parseInt('0x4e454228', 16);
+                    
+                    if (chainId !== OMEGA_CHAIN_ID) {
+                        try {
+                            await window.ethereum.request({
+                                method: 'wallet_switchEthereumChain',
+                                params: [{ chainId: '0x4e454228' }],
+                            });
+                        } catch (switchError) {
+                            if (switchError.code === 4902) {
+                                await window.ethereum.request({
+                                    method: 'wallet_addEthereumChain',
+                                    params: [{
+                                        chainId: '0x4e454228',
+                                        chainName: 'Omega Network',
+                                        rpcUrls: ['https://0x4e454228.rpc.aurora-cloud.dev'],
+                                        blockExplorerUrls: ['https://explorer.omeganetwork.co']
+                                    }],
+                                });
+                            }
+                        }
                     }
-                    await provider.send("eth_requestAccounts", []);
+                    
                     signer = provider.getSigner();
                     userAddress = await signer.getAddress();
                     contract = new ethers.Contract(contractAddress, contractABI, signer);
                     updateWalletStatus(true, userAddress);
+                    
+                    alert('✅ Wallet connected to Omega Network!');
                     fetchLeaderboard();
-                } catch (error) { console.error("Wallet connection failed:", error); alert("Failed to connect wallet."); updateWalletStatus(false); }
+                } catch (error) { 
+                    console.error("Wallet connection failed:", error); 
+                    alert("Failed to connect wallet."); 
+                    updateWalletStatus(false); 
+                }
             }
+            
             function updateWalletStatus(isConnected, address = 'N/A') {
                 if (isConnected) {
                     connectionStatusSpan.textContent = 'Connected';
@@ -348,66 +487,165 @@
                     connectWalletBtn.style.display = 'block'; walletStatusDiv.style.display = 'none'; submitScoreBtn.style.display = 'none';
                 }
             }
-            async function submitScore() {
-                if (!contract || !signer) { alert('Please connect your wallet first.'); return; }
-                submitScoreBtn.disabled = true; submitScoreBtn.textContent = 'Submitting...';
+
+            // GET USERNAME FROM UNIFIED PROFILE SYSTEM
+            async function getPlayerUsername() {
                 try {
-                    const tx = await contract.submitScore(score);
-                    await tx.wait();
-                    alert('Score submitted successfully!');
-                    fetchLeaderboard();
-                } catch (error) { console.error("Failed to submit score:", error); alert('Error submitting score.'); } 
-                finally { submitScoreBtn.disabled = false; submitScoreBtn.textContent = 'Submit Score'; submitScoreBtn.style.display = 'none'; }
-            }
-            async function fetchLeaderboard() {
-                try {
-                    let localProvider;
-                    if (typeof window.ethereum !== 'undefined') {
-                        localProvider = new ethers.providers.Web3Provider(window.ethereum);
-                    } else {
-                        leaderboardBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">MetaMask not detected. Please use a browser with MetaMask installed & enabled.</td></tr>';
-                        console.warn("window.ethereum not found. You may need to use a local server.");
-                        return;
+                    if (contract && userAddress) {
+                        const username = await contract.playerUsernames(userAddress);
+                        if (username && username.length > 0) {
+                            return username;
+                        }
                     }
-                    const readOnlyContract = new ethers.Contract(contractAddress, contractABI, localProvider);
-                    const leaderboardData = await readOnlyContract.getLeaderboard();
-                    const sorted = leaderboardData.sort((a, b) => b.score.sub(a.score));
-                    leaderboardBody.innerHTML = '';
-                    sorted.forEach((entry, index) => {
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `<td>${index + 1}</td><td>${entry.player}</td><td>${entry.score.toString()}</td>`;
-                        leaderboardBody.appendChild(tr);
-                    });
+                    // Fallback to address-based username
+                    return `Player${userAddress.slice(-4)}`;
                 } catch (error) {
-                    leaderboardBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Could not load leaderboard. Is your wallet connected to Aurora Network?</td></tr>';
-                    console.error("Failed to fetch leaderboard:", error);
+                    console.log('Could not get username, using fallback');
+                    return `Player${userAddress.slice(-4)}`;
                 }
             }
+            
+            // UPDATED SUBMIT SCORE FOR UNIFIED CONTRACT
+            async function submitScore() {
+                if (!contract || !signer) { 
+                    alert('Please connect your wallet first.'); 
+                    return; 
+                }
+
+                // Confirm score submission
+                if (!confirm('🚀 Submit your score to the blockchain leaderboard?\n\nYour score will be permanently recorded on Omega Network!\n\nClick OK to proceed or Cancel to skip.')) {
+                    return;
+                }
+                
+                submitScoreBtn.disabled = true; 
+                submitScoreBtn.textContent = 'Submitting Score, Please Wait a Moment';
+                
+                try {
+                    console.log('🎮 Starting Omega.io score submission...');
+                    
+                    // Get username for the leaderboard
+                    const username = await getPlayerUsername();
+                    console.log(`👤 Username: ${username}`);
+                    
+                    // Create game data
+                    const gameData = JSON.stringify({
+                        finalScore: score,
+                        snakeLength: snake.length,
+                        sessionTime: Date.now(),
+                        gameVersion: '1.0'
+                    });
+                    
+                    // Validate inputs
+                    if (score <= 0) throw new Error('Score must be greater than 0');
+                    if (username.length < 3 || username.length > 20) throw new Error('Username must be 3-20 characters');
+                    
+                    console.log(`🎮 Submitting to Omega Network - GameType: ${GAME_TYPE}, Score: ${score}, Username: ${username}`);
+                    
+                    // Submit transaction
+                    const tx = await contract.submitScore(GAME_TYPE, score, username, gameData);
+                    console.log(`📤 Transaction submitted: ${tx.hash}`);
+                    
+                    submitScoreBtn.textContent = 'Confirming...';
+                    
+                    // Wait for confirmation
+                    const receipt = await tx.wait();
+                    console.log(`✅ Transaction confirmed in block: ${receipt.blockNumber}`);
+                    
+                    alert(`🎉 Score submitted successfully to Omega Network!\n\nScore: ${score}\nBlock: ${receipt.blockNumber}\nTransaction: ${tx.hash.slice(0, 10)}...\n\n✨ Check the unified leaderboard!`);
+                    
+                    fetchLeaderboard();
+                    
+                } catch (error) { 
+                    console.error("❌ Failed to submit score:", error);
+                    
+                    let errorMessage = error.message;
+                    if (error.code === 4001) {
+                        errorMessage = 'Transaction was cancelled by user';
+                    } else if (error.code === -32603) {
+                        errorMessage = 'Connection issue - please try again';
+                    } else if (error.message.includes('timeout')) {
+                        errorMessage = 'Network is busy - please try again';
+                    } else if (error.message.includes('revert')) {
+                        errorMessage = 'Invalid score data - please try again';
+                    }
+                    
+                    alert(`❌ Score submission unsuccessful: ${errorMessage}`);
+                } 
+                finally { 
+                    submitScoreBtn.disabled = false; 
+                    submitScoreBtn.textContent = 'Submit Score'; 
+                    submitScoreBtn.style.display = 'none'; 
+                }
+            }
+
+            // UPDATED LEADERBOARD FOR UNIFIED CONTRACT
+            async function fetchLeaderboard() {
+                leaderboardBody.innerHTML = '<tr><td colspan="4">Loading...</td></tr>';
+                
+                try {
+                    const localProvider = new ethers.providers.JsonRpcProvider('https://0x4e454228.rpc.aurora-cloud.dev');
+                    const readOnlyContract = new ethers.Contract(contractAddress, contractABI, localProvider);
+                    
+                    console.log('📊 Fetching Omega.io leaderboard from unified contract...');
+                    
+                    // Get leaderboard for Omega.io (gameType 2) 
+                    const leaderboardData = await readOnlyContract.getLeaderboard(GAME_TYPE, 100);
+                    
+                    leaderboardBody.innerHTML = '';
+                    
+                    if (leaderboardData.length === 0) {
+                        leaderboardBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">🎯 No scores yet! Be the first!</td></tr>';
+                        return;
+                    }
+                    
+                    leaderboardData.forEach((entry, index) => {
+                        const tr = document.createElement('tr');
+                        const date = new Date(entry.timestamp.toNumber() * 1000).toLocaleDateString();
+                        const wallet = `${entry.player.slice(0, 6)}...${entry.player.slice(-4)}`;
+                        
+                        tr.innerHTML = `
+                            <td>${index + 1}</td>
+                            <td>${wallet}</td>
+                            <td>${entry.score.toString()}</td>
+                            <td>${date}</td>
+                        `;
+                        leaderboardBody.appendChild(tr);
+                    });
+                    
+                    console.log(`✅ Loaded ${leaderboardData.length} Omega.io leaderboard entries`);
+                    
+                } catch (error) {
+                    console.error("Failed to fetch leaderboard:", error);
+                    leaderboardBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Could not load leaderboard.</td></tr>';
+                }
+            }
+
             function exportToCSV() {
-                let csvContent = "data:text/csv;charset=utf-8,Rank,Wallet,Score\n";
-                leaderboardBody.querySelectorAll('tr').forEach(row => {
-                    const rowData = Array.from(row.querySelectorAll('td')).map(col => `"${col.innerText}"`).join(',');
-                    csvContent += rowData + "\n";
+                const rows = leaderboardBody.querySelectorAll('tr');
+                if (rows.length === 0 || rows[0].textContent.includes("No scores")) {
+                    alert("No leaderboard data to export.");
+                    return;
+                }
+                let csvContent = "data:text/csv;charset=utf-8,";
+                csvContent += "Rank,Wallet,Score,Date\r\n";
+                rows.forEach(row => {
+                    const cols = row.querySelectorAll('td');
+                    const rowData = Array.from(cols).map(col => `"${col.innerText}"`).join(",");
+                    csvContent += rowData + "\r\n";
                 });
+                const encodedUri = encodeURI(csvContent);
                 const link = document.createElement("a");
-                link.setAttribute("href", encodeURI(csvContent));
-                link.setAttribute("download", "omega-io-leaderboard.csv");
-                document.body.appendChild(link); link.click(); document.body.removeChild(link);
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", "omega-io-unified-leaderboard.csv");
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
             }
     
             connectWalletBtn.addEventListener('click', connectWallet);
             submitScoreBtn.addEventListener('click', submitScore);
             exportCsvBtn.addEventListener('click', exportToCSV);
-            window.addEventListener('load', fetchLeaderboard);
             
-            // Arcade credit check: redirect if not enough credits, unless Free Play is active
-            (function() {
-                const credits = parseInt(localStorage.getItem('omega_arcade_credits') || '0', 10);
-                const freePlay = localStorage.getItem('omega_arcade_freeplay') === 'true';
-                if ((!credits || credits < 5) && !freePlay) {
-                    window.location.href = '/';
-                }
-            })();
             // Deduct 5 credits on new game start (only in token mode)
             function deductArcadeCredits() {
                 let credits = parseInt(localStorage.getItem('omega_arcade_credits') || '0', 10);
@@ -459,6 +697,7 @@
                         // Start the game
                         for (let i = 0; i < 5; i++) spawnFood();
                         for (let i = 0; i < NUM_BOTS; i++) spawnBot();
+                        fetchLeaderboard();
                         requestAnimationFrame(gameLoop);
                         document.querySelector('.game-container').removeEventListener('click', freePlayClickHandler);
                     }
@@ -467,9 +706,14 @@
                 // Token mode: start game on first key/touch, deduct credits
                 for (let i = 0; i < 5; i++) spawnFood();
                 for (let i = 0; i < NUM_BOTS; i++) spawnBot();
+                fetchLeaderboard();
                 requestAnimationFrame(gameLoop);
             }
+            
+            console.log('🎮 Omega.io loaded with Unified Arcade Leaderboard integration!');
+            console.log('📋 Contract Address:', contractAddress);
+            console.log('🐍 Game Type: OMEGA_IO (2)');
         });
     </script>
 </body>
-</html>
+</html> 
